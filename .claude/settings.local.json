@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Recurse -File | Where-Object { $_.Name -ne '.gitkeep' } | Select-Object -ExpandProperty FullName | Sort-Object)",
+      "PowerShell(Test-NetConnection *)",
+      "PowerShell(python --version; python -c \"import pymysql; print\\('pymysql', pymysql.__version__\\)\" 2>&1)",
+      "PowerShell(pip install *)",
+      "PowerShell(python \"D:\\\\ng\\\\simple ecomers\\\\scripts\\\\check_db.py\")",
+      "PowerShell(docker build *)",
+      "PowerShell(docker run *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(curl -s \"http://localhost:5173/api/v1/products?page=1&page_size=4\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/src/main.jsx)",
+      "Bash(curl -s -o /dev/null -w \"dev server: %{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(curl -s -o /dev/null -w \"backend:    %{http_code}\\\\n\" http://localhost:8000/health)",
+      "Bash(curl -s \"http://localhost:5173/api/v1/products?page=1&page_size=3\")",
+      "Bash(npx playwright *)",
+      "Bash(node verify-storefront.mjs)"
+    ]
+  }
+}

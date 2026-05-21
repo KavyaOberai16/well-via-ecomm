@@ -1,0 +1,19 @@
+services:
+  backend:
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+    volumes: []
+    restart: always
+
+  frontend:
+    restart: always
+
+  mysql:
+    ports: []
+    restart: always
+
+  redis:
+    ports: []
+    restart: always
+
+  nginx:
+    restart: always
