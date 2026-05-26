@@ -8,7 +8,16 @@ import './styles/global.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { staleTime: 60_000, retry: 1 },
+    queries: {
+      staleTime: 60_000,
+      // Retry transient failures once, but never a 4xx (404, 401, …) —
+      // those are deterministic, so retrying only delays the error state.
+      retry: (failureCount, error) => {
+        const status = error?.response?.status;
+        if (status >= 400 && status < 500) return false;
+        return failureCount < 1;
+      },
+    },
   },
 });
 

@@ -13,7 +13,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
       )}
     >
       {Icon && (
-        <span className="grid size-12 place-items-center rounded-full bg-white/5 text-ink-secondary">
+        <span className="grid size-12 place-items-center rounded-full bg-fill text-ink-secondary">
           <Icon className="size-6" aria-hidden="true" />
         </span>
       )}

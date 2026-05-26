@@ -31,6 +31,10 @@ WORKDIR /app
 COPY --from=builder /root/.local /home/app/.local
 COPY --chown=app:app . .
 
+# Writable uploads dir for the local storage backend (the app runs non-root,
+# and /app itself is root-owned).
+RUN install -d -o app -g app /app/uploads
+
 USER app
 
 EXPOSE 8000

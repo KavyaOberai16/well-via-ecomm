@@ -7,6 +7,21 @@
     <meta name="theme-color" content="#0B0B0F" />
     <meta name="description" content="A premium modern shopping experience." />
     <title>Lumen — Premium Store</title>
+    <!-- Apply the theme before paint to avoid a flash of the wrong theme. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('lumen-theme');
+          if (t !== 'dark' && t !== 'light') {
+            t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          }
+          var root = document.documentElement;
+          root.classList.remove('dark', 'light');
+          root.classList.add(t);
+          root.style.colorScheme = t;
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

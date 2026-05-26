@@ -6,7 +6,7 @@ shared memory across sessions.
 ## Overview
 
 A production-shape ecommerce platform: product catalog, cart, orders, and
-JWT auth. Built as a monorepo with a separated backend and frontend.
+PASETO-based auth. Built as a monorepo with a separated backend and frontend.
 
 ## Product Vision
 
@@ -29,7 +29,7 @@ This changes how ALL agents think.
 
 | Layer | Technology |
 |-------|------------|
-| Backend | FastAPI, SQLAlchemy 2, Alembic, Pydantic v2, python-jose, passlib |
+| Backend | FastAPI, SQLAlchemy 2, Alembic, Pydantic v2, pyseto (PASETO v4.local), passlib |
 | Frontend | React 18, Vite, React Router, TanStack Query, Zustand, axios |
 | Database | MySQL 8.0 |
 | Cache / queue | Redis 7, Celery |

@@ -31,7 +31,7 @@ export default function Hero() {
       <div aria-hidden="true" className="absolute inset-0 -z-10">
         <div className="absolute -top-1/3 left-1/2 size-[680px] -translate-x-1/2 rounded-full bg-accent/20 blur-[140px]" />
         <div className="absolute bottom-0 right-0 size-[420px] rounded-full bg-accent/10 blur-[120px]" />
-        <div className="absolute inset-0 [background-image:linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_72%)]" />
+        <div className="absolute inset-0 [background-image:linear-gradient(var(--grid-line)_1px,transparent_1px),linear-gradient(90deg,var(--grid-line)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_72%)]" />
         {/* Scrim so text contrast holds */}
         <div className="absolute inset-0 bg-gradient-to-b from-bg-base/40 via-transparent to-bg-base" />
       </div>

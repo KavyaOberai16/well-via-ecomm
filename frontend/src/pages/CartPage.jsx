@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Trash2, ArrowRight, Lock } from 'lucide-react';
+import { ShoppingBag, Trash2, ArrowRight, Lock, AlertTriangle } from 'lucide-react';
 import { Page } from '@/components/layout/Page.jsx';
 import { Button } from '@/components/ui/Button.jsx';
 import { Card } from '@/components/ui/Card.jsx';
@@ -13,13 +13,15 @@ import { fadeUp, staggerContainer } from '@/lib/motion.js';
 
 export default function CartPage() {
   const user = useAuthStore((s) => s.user);
-  const { data, isLoading, isError } = useCart();
+  const { data, isLoading, isError, error, refetch } = useCart();
   const removeItem = useRemoveFromCart();
 
   const items = data?.items ?? [];
   const subtotal = data?.subtotal ?? 0;
+  const status = error?.response?.status;
 
-  if (!user || isError) {
+  // Not signed in (or the session expired) — prompt to sign in.
+  if (!user || status === 401) {
     return (
       <Page>
         <h1 className="text-h1 text-ink-primary">Your cart</h1>
@@ -32,6 +34,27 @@ export default function CartPage() {
               <Link to="/login">
                 <Button size="sm">Sign in</Button>
               </Link>
+            }
+          />
+        </div>
+      </Page>
+    );
+  }
+
+  // Signed in, but the cart failed to load — a server error, not an auth issue.
+  if (isError) {
+    return (
+      <Page>
+        <h1 className="text-h1 text-ink-primary">Your cart</h1>
+        <div className="mt-6">
+          <EmptyState
+            icon={AlertTriangle}
+            title="We couldn't load your cart"
+            description="Something went wrong on our end. Please try again."
+            action={
+              <Button size="sm" onClick={() => refetch()}>
+                Retry
+              </Button>
             }
           />
         </div>

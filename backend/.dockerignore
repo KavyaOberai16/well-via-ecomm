@@ -8,6 +8,7 @@ venv
 .env
 .env.*
 !.env.example
+uploads
 .git
 .gitignore
 .pytest_cache

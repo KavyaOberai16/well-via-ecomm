@@ -35,7 +35,10 @@ async function visible(locator, timeout = 12000) {
 const browser = await chromium.launch();
 
 async function newPage() {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 } });
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 860 },
+    colorScheme: 'dark', // pin baseline; theme behavior is covered by verify-theme.mjs
+  });
   const page = await ctx.newPage();
   const errors = [];
   page.on('console', (m) => {
@@ -84,8 +87,17 @@ try {
     );
 
     await page.getByPlaceholder('Search products…').fill('Aura');
-    await page.waitForTimeout(700);
-    const afterSearch = await page.locator('a[href^="/products/"]').count();
+    // Wait for the debounce (300ms) + refetch to settle on the filtered result.
+    let afterSearch = -1;
+    try {
+      await page.waitForFunction(
+        () => document.querySelectorAll('a[href^="/products/"]').length === 1,
+        { timeout: 10000 },
+      );
+      afterSearch = 1;
+    } catch {
+      afterSearch = await page.locator('a[href^="/products/"]').count();
+    }
     await page.screenshot({ path: `${SHOTS}/04-shop-search.png`, fullPage: true });
     log('Shop search filters', afterSearch === 1, `"Aura" -> cards=${afterSearch}`);
 
@@ -151,11 +163,12 @@ try {
     await page.getByLabel('Email').fill('admin@lumen.store');
     await page.getByLabel('Password').fill('Admin123!');
     await page.getByRole('button', { name: /^sign in$/i }).click();
-    await page.waitForURL(BASE + '/', { timeout: 8000 }).catch(() => {});
-    const onHome = page.url() === BASE + '/';
+    // Admins land on /admin; other users land on /.
+    await page.waitForURL(BASE + '/admin', { timeout: 8000 }).catch(() => {});
+    const loggedIn = page.url() === BASE + '/admin';
     log(
-      'Admin login',
-      onHome && errors.length === 0,
+      'Admin login (PASETO token)',
+      loggedIn && errors.length === 0,
       `afterLogin url=${page.url()} errors=${errors.length}`,
     );
 

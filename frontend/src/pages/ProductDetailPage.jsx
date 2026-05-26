@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/Button.jsx';
 import { Badge } from '@/components/ui/Badge.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { EmptyState } from '@/components/feedback/EmptyState.jsx';
-import { ProductMedia } from '@/features/products/components/ProductMedia.jsx';
+import { ProductGallery } from '@/features/products/components/ProductGallery.jsx';
 import { useProduct } from '@/features/products/hooks.js';
 import { useAddToCart } from '@/features/cart/hooks.js';
 import { formatPrice, stockLabel } from '@/lib/utils.js';
@@ -80,11 +80,8 @@ export default function ProductDetailPage() {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="overflow-hidden rounded-lg border border-line-subtle bg-bg-elevated shadow-lg"
         >
-          <div className="aspect-[4/5]">
-            <ProductMedia product={product} eager />
-          </div>
+          <ProductGallery product={product} />
         </motion.div>
 
         <div className="flex flex-col">

@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Menu, X, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils.js';
 import { useAuthStore } from '@/features/auth/store.js';
+import { ThemeToggle } from '@/components/ui/ThemeToggle.jsx';
+import AccountMenu from './AccountMenu.jsx';
 
 const LINKS = [
   { to: '/', label: 'Home', end: true },
@@ -14,6 +16,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
+
+  const links = user?.is_admin ? [...LINKS, { to: '/admin', label: 'Admin' }] : LINKS;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 64);
@@ -41,7 +45,7 @@ export default function Navbar() {
         </Link>
 
         <ul className="ml-2 hidden items-center gap-1 md:flex">
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <li key={l.to}>
               <NavLink
                 to={l.to}
@@ -62,25 +66,21 @@ export default function Navbar() {
         </ul>
 
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
           <Link
             to="/cart"
             aria-label="Cart"
-            className="grid size-10 place-items-center rounded-sm text-ink-secondary transition-colors hover:bg-white/5 hover:text-ink-primary focus-visible:focus-ring"
+            className="grid size-10 place-items-center rounded-sm text-ink-secondary transition-colors hover:bg-fill hover:text-ink-primary focus-visible:focus-ring"
           >
             <ShoppingBag className="size-5" aria-hidden="true" />
           </Link>
-          <Link
-            to="/login"
-            className="hidden rounded-sm px-3 py-2 text-sm text-ink-secondary transition-colors hover:text-ink-primary focus-visible:focus-ring sm:block"
-          >
-            {user ? 'Account' : 'Sign in'}
-          </Link>
+          <AccountMenu />
           <button
             type="button"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="grid size-10 place-items-center rounded-sm text-ink-secondary transition-colors hover:bg-white/5 hover:text-ink-primary focus-visible:focus-ring md:hidden"
+            className="grid size-10 place-items-center rounded-sm text-ink-secondary transition-colors hover:bg-fill hover:text-ink-primary focus-visible:focus-ring md:hidden"
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -97,7 +97,7 @@ export default function Navbar() {
             className="overflow-hidden glass md:hidden"
           >
             <ul className="flex flex-col gap-1 px-6 py-4">
-              {[...LINKS, { to: '/cart', label: 'Cart' }, { to: '/login', label: user ? 'Account' : 'Sign in' }].map(
+              {[...links, { to: '/cart', label: 'Cart' }].map(
                 (l) => (
                   <li key={l.to}>
                     <NavLink
@@ -108,7 +108,7 @@ export default function Navbar() {
                         cn(
                           'block rounded-sm px-3 py-2.5 text-sm transition-colors focus-visible:focus-ring',
                           isActive
-                            ? 'bg-white/5 text-ink-primary'
+                            ? 'bg-fill text-ink-primary'
                             : 'text-ink-secondary hover:text-ink-primary',
                         )
                       }

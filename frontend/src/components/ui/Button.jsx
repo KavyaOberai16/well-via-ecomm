@@ -18,7 +18,7 @@ const buttonVariants = cva(
           'bg-accent text-ink-inverse hover:bg-accent-hover active:bg-accent-press hover:-translate-y-px active:translate-y-0',
         secondary:
           'glass text-ink-primary hover:border-line-strong hover:-translate-y-px active:translate-y-0',
-        ghost: 'text-ink-secondary hover:text-ink-primary hover:bg-white/5',
+        ghost: 'text-ink-secondary hover:text-ink-primary hover:bg-fill',
         destructive:
           'bg-danger text-white hover:brightness-110 hover:-translate-y-px active:translate-y-0',
       },

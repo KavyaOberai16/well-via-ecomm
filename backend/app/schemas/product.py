@@ -4,14 +4,13 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class CategoryBase(BaseModel):
-    name: str = Field(min_length=1, max_length=120)
-    slug: str = Field(min_length=1, max_length=140)
-
-
-class CategoryRead(CategoryBase):
+class ProductImageRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
     id: int
+    url: str
+    position: int
+    is_primary: bool
 
 
 class ProductBase(BaseModel):
@@ -41,5 +40,6 @@ class ProductRead(ProductBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    images: list[ProductImageRead] = []
     created_at: datetime
     updated_at: datetime

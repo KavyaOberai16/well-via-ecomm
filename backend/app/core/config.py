@@ -20,10 +20,10 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = Field(default="development")
     DEBUG: bool = False
 
+    # SECRET_KEY also seeds the PASETO v4.local symmetric key (see core/security.py).
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    JWT_ALGORITHM: str = "HS256"
 
     MYSQL_HOST: str
     MYSQL_PORT: int = 3306
@@ -39,6 +39,36 @@ class Settings(BaseSettings):
 
     STRIPE_API_KEY: str = ""
     EMAIL_FROM: str = "noreply@example.com"
+
+    # Image storage. STORAGE_BACKEND: "local" (dev) or "s3" (AWS S3 / DO Spaces).
+    STORAGE_BACKEND: str = "local"
+    UPLOAD_DIR: str = "uploads"
+    MEDIA_BASE_URL: str = "http://localhost:8000"
+    MAX_IMAGE_SIZE_MB: int = 15
+    MAX_PRODUCT_IMAGES: int = 8
+
+    # S3 / DigitalOcean Spaces (both S3-compatible — Spaces just needs an endpoint).
+    S3_ENDPOINT_URL: str = ""
+    S3_REGION: str = ""
+    S3_BUCKET: str = ""
+    S3_ACCESS_KEY: str = ""
+    S3_SECRET_KEY: str = ""
+    S3_PUBLIC_BASE_URL: str = ""
+
+    # Email — "console" (dev: logs the message) or "smtp" (real delivery).
+    EMAIL_BACKEND: str = "console"
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_USE_TLS: bool = True
+    OTP_TTL_MINUTES: int = 10
+
+    # Google OAuth (server-side redirect flow). Blank client id disables it.
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/google/callback"
+    FRONTEND_URL: str = "http://localhost:5173"
 
     @computed_field
     @property

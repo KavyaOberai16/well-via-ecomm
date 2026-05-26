@@ -5,23 +5,35 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: { base: '#0B0B0F', elevated: '#14141B', sunken: '#070709' },
-        ink: {
-          primary: '#F5F5F7',
-          secondary: '#A1A1AA',
-          tertiary: '#6B6B76',
-          inverse: '#0B0B0F',
+        // Surface + ink are theme-driven — see :root/.light blocks in global.css.
+        // RGB-triplet vars keep Tailwind opacity modifiers (e.g. bg-bg-base/50) working.
+        bg: {
+          base: 'rgb(var(--bg-base) / <alpha-value>)',
+          elevated: 'rgb(var(--bg-elevated) / <alpha-value>)',
+          sunken: 'rgb(var(--bg-sunken) / <alpha-value>)',
         },
+        ink: {
+          primary: 'rgb(var(--ink-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--ink-secondary) / <alpha-value>)',
+          tertiary: 'rgb(var(--ink-tertiary) / <alpha-value>)',
+          inverse: 'rgb(var(--ink-inverse) / <alpha-value>)',
+        },
+        // Alpha-based surfaces — referenced directly (no opacity modifier).
+        line: {
+          subtle: 'var(--line-subtle)',
+          strong: 'var(--line-strong)',
+        },
+        fill: {
+          DEFAULT: 'var(--fill)',
+          strong: 'var(--fill-strong)',
+        },
+        glass: 'var(--glass)',
+        // Brand + status colors are constant across both themes.
         accent: {
           DEFAULT: '#6366F1',
           hover: '#7C7FF5',
           press: '#5457D6',
         },
-        line: {
-          subtle: 'rgba(255,255,255,0.08)',
-          strong: 'rgba(255,255,255,0.16)',
-        },
-        glass: 'rgba(20,20,27,0.55)',
         success: '#22C55E',
         warning: '#F59E0B',
         danger: '#EF4444',
@@ -46,9 +58,9 @@ export default {
         xl: '32px',
       },
       boxShadow: {
-        sm: '0 1px 2px rgba(0,0,0,0.4)',
-        md: '0 8px 24px rgba(0,0,0,0.45)',
-        lg: '0 24px 60px rgba(0,0,0,0.55)',
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
         glow: '0 0 0 1px rgba(99,102,241,0.4), 0 8px 32px rgba(99,102,241,0.25)',
       },
       maxWidth: {

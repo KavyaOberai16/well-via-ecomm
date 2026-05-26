@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin
@@ -60,3 +60,43 @@ def update_product(product_id: int, payload: ProductUpdate, db: Session = Depend
 )
 def delete_product(product_id: int, db: Session = Depends(get_db)):
     ProductService(db).delete(product_id)
+
+
+@router.post(
+    "/{product_id}/images",
+    response_model=ProductRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
+)
+async def upload_product_images(
+    product_id: int,
+    files: list[UploadFile] = File(...),
+    db: Session = Depends(get_db),
+):
+    payloads = [
+        (await f.read(), f.filename or "image", f.content_type or "")
+        for f in files
+    ]
+    return ProductService(db).add_images(product_id, payloads)
+
+
+@router.delete(
+    "/{product_id}/images/{image_id}",
+    response_model=ProductRead,
+    dependencies=[Depends(require_admin)],
+)
+def delete_product_image(
+    product_id: int, image_id: int, db: Session = Depends(get_db)
+):
+    return ProductService(db).delete_image(product_id, image_id)
+
+
+@router.post(
+    "/{product_id}/images/{image_id}/primary",
+    response_model=ProductRead,
+    dependencies=[Depends(require_admin)],
+)
+def set_primary_product_image(
+    product_id: int, image_id: int, db: Session = Depends(get_db)
+):
+    return ProductService(db).set_primary_image(product_id, image_id)

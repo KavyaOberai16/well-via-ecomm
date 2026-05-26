@@ -1,4 +1,5 @@
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 
 from app.models.product import Product
 from app.repositories.base import BaseRepository
@@ -10,6 +11,14 @@ class ProductRepository(BaseRepository[Product]):
     def get_by_sku(self, sku: str) -> Product | None:
         return self.db.execute(select(Product).where(Product.sku == sku)).scalar_one_or_none()
 
+    def get_with_images(self, product_id: int) -> Product | None:
+        stmt = (
+            select(Product)
+            .options(selectinload(Product.images))
+            .where(Product.id == product_id)
+        )
+        return self.db.execute(stmt).scalar_one_or_none()
+
     def search(
         self,
         *,
@@ -18,7 +27,7 @@ class ProductRepository(BaseRepository[Product]):
         offset: int = 0,
         limit: int = 20,
     ) -> tuple[list[Product], int]:
-        stmt = select(Product)
+        stmt = select(Product).options(selectinload(Product.images))
         count_stmt = select(func.count()).select_from(Product)
 
         if q:

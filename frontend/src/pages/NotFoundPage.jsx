@@ -17,7 +17,7 @@ export default function NotFoundPage() {
         transition={{ duration: duration.base, ease: ease.entrance }}
         className="flex flex-col items-center"
       >
-        <span className="grid size-14 place-items-center rounded-full bg-white/5 text-ink-secondary">
+        <span className="grid size-14 place-items-center rounded-full bg-fill text-ink-secondary">
           <Compass className="size-7" aria-hidden="true" />
         </span>
         <p className="mt-6 text-display text-ink-primary">404</p>

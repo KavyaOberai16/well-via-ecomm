@@ -64,8 +64,8 @@ features/<name>/
 ```
 
 - `pages/` compose features; they hold routing and layout, not data logic.
-- All HTTP goes through `services/apiClient.js` (axios instance with the JWT
-  interceptor) — never call `axios`/`fetch` directly.
+- All HTTP goes through `services/apiClient.js` (axios instance with the
+  bearer-token interceptor) — never call `axios`/`fetch` directly.
 - Server state → TanStack Query (`useQuery`/`useMutation`).
   Client/UI state → Zustand. Do not duplicate server data into Zustand.
 - Auth token lives in the persisted `useAuthStore`; the apiClient interceptor

@@ -1,7 +1,9 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.core.config import settings
@@ -37,6 +39,12 @@ def create_app() -> FastAPI:
 
     register_exception_handlers(app)
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+    # Serve locally-stored uploads. With STORAGE_BACKEND=s3 this is unused —
+    # images are served straight from the bucket / CDN.
+    if settings.STORAGE_BACKEND == "local":
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+        app.mount("/media", StaticFiles(directory=settings.UPLOAD_DIR), name="media")
 
     @app.get("/health", tags=["system"])
     def health():
