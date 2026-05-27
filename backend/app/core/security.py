@@ -6,6 +6,7 @@ keeps working with no new environment variable.
 """
 import hashlib
 import json
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -56,12 +57,30 @@ def create_access_token(subject: str | int, extra: dict[str, Any] | None = None)
     return _encode(payload)
 
 
-def create_refresh_token(subject: str | int) -> str:
+def new_session_id() -> str:
+    """Generate a session/family id. Same shape as a jti — just a different
+    role. URL-safe and impossible to guess."""
+    return secrets.token_urlsafe(16)
+
+
+def new_jti() -> str:
+    """Per-token id. Lets the session service tell rotated tokens apart."""
+    return secrets.token_urlsafe(16)
+
+
+def create_refresh_token(
+    subject: str | int, *, family_id: str, jti: str
+) -> str:
+    """Refresh token carries both `family_id` (session) and `jti` (this specific
+    token within the family). The server pairs them against Redis on /refresh
+    to detect reuse — see SessionService."""
     expire = _now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     payload = {
         "sub": str(subject),
         "type": "refresh",
         "exp": expire.isoformat(),
+        "fid": family_id,
+        "jti": jti,
     }
     return _encode(payload)
 

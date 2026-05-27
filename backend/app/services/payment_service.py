@@ -190,15 +190,70 @@ class PaymentService:
         # Idempotent: only PENDING orders move. Webhooks can fire twice.
         if order.status != OrderStatus.PENDING:
             return
+        notify_paid = False
         if payment_status == PaymentStatus.SUCCESS:
             order.status = OrderStatus.PAID
+            from datetime import datetime, timezone
+
+            order.paid_at = datetime.now(timezone.utc)
             self._record_coupon_usage(order)
+            self._award_loyalty_points(order)
+            self._complete_referral(order)
             self._clear_cart(order.user_id)
+            notify_paid = True
         elif payment_status == PaymentStatus.FAILED:
             order.status = OrderStatus.CANCELLED
             self._restore_stock(order)
         # PENDING -> no change.
         self.db.commit()
+
+        # Notifications go AFTER commit so the customer never gets a
+        # "your order is paid" email for a row that didn't actually save.
+        if notify_paid:
+            self._send_notification(order, "order_paid")
+
+    def _send_notification(self, order: Order, event_name: str) -> None:
+        """Fan out to email + SMS. Wrapped so a flaky downstream never breaks
+        the payment commit."""
+        from app.services.notifications import NotificationEvent, NotificationService
+
+        try:
+            NotificationService(self.db).notify(order, NotificationEvent(event_name))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "notification dispatch failed for order %s event %s: %s",
+                order.id,
+                event_name,
+                exc,
+            )
+
+    def _award_loyalty_points(self, order: Order) -> None:
+        """Award purchase points after payment succeeds. Idempotent via the
+        unique (reason, ref_type, ref_id) index — webhook re-runs are safe."""
+        # Lazy import to keep loyalty optional / avoid a cycle.
+        from app.services.loyalty_service import LoyaltyService
+
+        try:
+            LoyaltyService(self.db).award_for_order(order)
+        except Exception as exc:
+            # Never fail the payment commit on a points hiccup. The reconcile
+            # script can backfill if anything was missed.
+            logger.warning(
+                "loyalty award failed for order %s: %s", order.id, exc
+            )
+
+    def _complete_referral(self, order: Order) -> None:
+        """If this order's user was referred, complete the referral and mint
+        the referrer's reward coupon. Idempotent — only PENDING referrals move,
+        so re-running the webhook is safe."""
+        from app.services.referral_service import ReferralService
+
+        try:
+            ReferralService(self.db).complete_referral_for_user(order.user_id, order.id)
+        except Exception as exc:
+            logger.warning(
+                "referral completion failed for order %s: %s", order.id, exc
+            )
 
     def _record_coupon_usage(self, order: Order) -> None:
         if not order.coupon_code or order.discount_amount <= 0:

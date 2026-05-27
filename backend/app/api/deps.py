@@ -1,9 +1,10 @@
 from typing import Generator
 
-from fastapi import Depends, Header
+from fastapi import Depends, Header, Request
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ForbiddenError, UnauthorizedError
+from app.core.rate_limit import RateLimiter, get_client_ip
 from app.core.security import decode_token
 from app.db.session import SessionLocal
 from app.models.user import User
@@ -55,5 +56,28 @@ def require_permission(permission: str):
         if not user.has_permission(permission):
             raise ForbiddenError(f"Missing required permission: {permission}")
         return user
+
+    return _checker
+
+
+def rate_limit_by_ip(*, scope: str, limit: int, window_sec: int):
+    """Dependency factory for IP-keyed rate limits.
+
+    Mount on an endpoint with::
+
+        @router.post(..., dependencies=[
+            Depends(rate_limit_by_ip(scope='login.ip', limit=30, window_sec=900)),
+        ])
+
+    The dep is a no-op when `settings.RATE_LIMIT_ENABLED=false`. Disabled
+    limits (limit <= 0) also short-circuit. A 429 raised here carries
+    `Retry-After` so well-behaved clients back off.
+    """
+
+    def _checker(request: Request) -> None:
+        ip = get_client_ip(request)
+        RateLimiter().enforce(
+            scope=scope, identifier=ip, limit=limit, window_sec=window_sec
+        )
 
     return _checker

@@ -5,10 +5,11 @@ Three audiences:
   - User:       POST/PATCH/DELETE for their own review
   - Admin:      full CRUD + filtering, can create as any author or arbitrary user
 """
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db, require_permission
+from app.core.rate_limit import get_client_ip
 from app.models.user import User
 from app.schemas.review import (
     AdminReviewCreate,
@@ -18,6 +19,7 @@ from app.schemas.review import (
     ReviewRead,
     ReviewUpdate,
 )
+from app.services.audit_service import AuditService
 from app.services.review_service import ReviewService
 
 # Two routers — one is mounted under /products (public + user create), the
@@ -130,9 +132,13 @@ def list_reviews_admin(
     "/admin",
     response_model=ReviewRead,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_permission("reviews.create"))],
 )
-def admin_create_review(payload: AdminReviewCreate, db: Session = Depends(get_db)):
+def admin_create_review(
+    payload: AdminReviewCreate,
+    request: Request,
+    actor: User = Depends(require_permission("reviews.create")),
+    db: Session = Depends(get_db),
+):
     review = ReviewService(db).admin_create(
         product_id=payload.product_id,
         rating=payload.rating,
@@ -143,16 +149,35 @@ def admin_create_review(payload: AdminReviewCreate, db: Session = Depends(get_db
         is_approved=payload.is_approved,
         user_id=payload.user_id,
     )
+    AuditService(db).record(
+        actor=actor,
+        actor_ip=get_client_ip(request),
+        action="review.admin_create",
+        target_type="review",
+        target_id=review.id,
+        target_label=f"product#{review.product_id} by {payload.author_name or payload.user_id}",
+        summary=f"Created {review.rating}★ review for product #{review.product_id}",
+        extra={
+            "rating": review.rating,
+            "title": review.title,
+            "is_verified_purchase": review.is_verified_purchase,
+            "is_approved": review.is_approved,
+        },
+    )
+    db.commit()
     return ReviewRead.from_orm_review(review)
 
 
 @admin_router.patch(
     "/admin/{review_id}",
     response_model=ReviewRead,
-    dependencies=[Depends(require_permission("reviews.update"))],
 )
 def admin_update_review(
-    review_id: int, payload: AdminReviewUpdate, db: Session = Depends(get_db)
+    review_id: int,
+    payload: AdminReviewUpdate,
+    request: Request,
+    actor: User = Depends(require_permission("reviews.update")),
+    db: Session = Depends(get_db),
 ):
     review = ReviewService(db).admin_update(
         review_id,
@@ -163,13 +188,43 @@ def admin_update_review(
         is_verified_purchase=payload.is_verified_purchase,
         is_approved=payload.is_approved,
     )
+    AuditService(db).record(
+        actor=actor,
+        actor_ip=get_client_ip(request),
+        action="review.admin_update",
+        target_type="review",
+        target_id=review.id,
+        target_label=f"product#{review.product_id}",
+        summary=f"Updated review #{review.id} on product #{review.product_id}",
+        extra=payload.model_dump(exclude_unset=True),
+    )
+    db.commit()
     return ReviewRead.from_orm_review(review)
 
 
 @admin_router.delete(
     "/admin/{review_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_permission("reviews.delete"))],
 )
-def admin_delete_review(review_id: int, db: Session = Depends(get_db)):
+def admin_delete_review(
+    review_id: int,
+    request: Request,
+    actor: User = Depends(require_permission("reviews.delete")),
+    db: Session = Depends(get_db),
+):
+    # Snapshot for the audit row — once deleted we can't fish it back.
+    review = ReviewService(db).reviews.get(review_id)
+    product_id = review.product_id if review else None
+    rating = review.rating if review else None
     ReviewService(db).admin_delete(review_id)
+    AuditService(db).record(
+        actor=actor,
+        actor_ip=get_client_ip(request),
+        action="review.admin_delete",
+        target_type="review",
+        target_id=review_id,
+        target_label=f"product#{product_id}" if product_id else None,
+        summary=f"Deleted review #{review_id}"
+        + (f" ({rating}★ on product #{product_id})" if product_id else ""),
+    )
+    db.commit()

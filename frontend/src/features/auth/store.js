@@ -10,6 +10,9 @@ export const useAuthStore = create(
       setSession: ({ user, accessToken, refreshToken }) =>
         set({ user, accessToken, refreshToken }),
       setUser: (user) => set({ user }),
+      // setTokens swaps just the token pair (e.g. after a refresh rotates).
+      setTokens: ({ accessToken, refreshToken }) =>
+        set({ accessToken, refreshToken }),
       logout: () => set({ user: null, accessToken: null, refreshToken: null }),
 
       // Mirrors backend User.has_permission — admin bypasses; otherwise check

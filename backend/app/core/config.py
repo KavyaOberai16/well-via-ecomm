@@ -70,6 +70,23 @@ class Settings(BaseSettings):
     GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/google/callback"
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # Rate limits — defaults match the production guidance from the security
+    # review (5 login attempts / 15 min per (email, IP), 30 per IP). Set
+    # RATE_LIMIT_ENABLED=false to short-circuit every check (tests, local dev).
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_LOGIN_IP_PER_15MIN: int = 30
+    RATE_LIMIT_LOGIN_EMAIL_PER_15MIN: int = 5
+    RATE_LIMIT_REGISTER_IP_PER_HOUR: int = 10
+    RATE_LIMIT_FORGOT_PASSWORD_EMAIL_PER_HOUR: int = 3
+    # After this many consecutive failed logins for an email, the account is
+    # soft-locked for ACCOUNT_LOCKOUT_MINUTES. A successful login clears both.
+    ACCOUNT_LOCKOUT_THRESHOLD: int = 10
+    ACCOUNT_LOCKOUT_MINUTES: int = 15
+    # When set, requests carrying these IPs in X-Forwarded-For are trusted.
+    # The nginx container is the only upstream that should be talking to the
+    # backend; if you're behind a different proxy add its IP here.
+    TRUSTED_PROXIES: List[str] = ["127.0.0.1", "::1"]
+
     # Payments. PAYMENT_PROVIDER: "mock" (dev: local simulator) or "phonepe" (real).
     # PHONEPE_ENV: "sandbox" or "production" — selects the PhonePe API base URL.
     # PAYMENT_RETURN_URL is where PhonePe sends the user's browser back to after

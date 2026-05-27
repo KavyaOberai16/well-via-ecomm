@@ -14,23 +14,32 @@ import {
   Users,
   Percent,
   Star,
+  Coins,
+  History,
+  Settings as SettingsIcon,
+  ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils.js';
 import { useAuthStore } from '@/features/auth/store.js';
+import { authApi } from '@/features/auth/api.js';
 import { ThemeToggle } from '@/components/ui/ThemeToggle.jsx';
 
 // `permission: null` -> always visible to staff. Otherwise the item is hidden
 // when the user lacks the permission (admins bypass via hasPermission).
 const NAV = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true, permission: null },
+  { to: '/admin/orders', label: 'Orders', icon: ClipboardList, end: false, permission: 'orders.view_all' },
   { to: '/admin/products', label: 'Products', icon: Package, end: false, permission: 'products.view' },
   { to: '/admin/categories', label: 'Categories', icon: Tags, end: false, permission: 'categories.view' },
   { to: '/admin/hero', label: 'Hero slides', icon: GalleryHorizontal, end: false, permission: 'hero_slides.manage' },
   { to: '/admin/coupons', label: 'Coupons', icon: TicketPercent, end: false, permission: 'coupons.view' },
   { to: '/admin/taxes', label: 'Taxes', icon: Percent, end: false, permission: 'taxes.view' },
   { to: '/admin/reviews', label: 'Reviews', icon: Star, end: false, permission: 'reviews.view' },
+  { to: '/admin/loyalty', label: 'Loyalty', icon: Coins, end: false, permission: 'loyalty.view' },
   { to: '/admin/users', label: 'Users', icon: Users, end: false, permission: 'users.view' },
   { to: '/admin/roles', label: 'Roles', icon: ShieldCheck, end: false, permission: 'roles.view' },
+  { to: '/admin/audit', label: 'Audit log', icon: History, end: false, permission: 'audit.view' },
+  { to: '/admin/settings', label: 'Settings', icon: SettingsIcon, end: false, permission: 'settings.manage' },
 ];
 
 function useVisibleNav() {
@@ -116,7 +125,13 @@ function SidebarContent({ onNavigate }) {
 
         <button
           type="button"
-          onClick={logout}
+          onClick={() => {
+            // Tell the server to revoke this refresh-token family. Errors are
+            // swallowed — local state must always clear.
+            const rt = useAuthStore.getState().refreshToken;
+            if (rt) authApi.logout(rt).catch(() => {});
+            logout();
+          }}
           className="flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm text-ink-secondary transition-colors hover:bg-danger/10 hover:text-danger focus-visible:focus-ring"
         >
           <LogOut className="size-4" aria-hidden="true" />

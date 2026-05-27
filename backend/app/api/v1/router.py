@@ -1,16 +1,20 @@
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
+    audit,
     auth,
     cart,
     categories,
     coupons,
+    dashboard,
     hero_slides,
+    loyalty,
     orders,
     payments,
     products,
     reviews,
     roles,
+    settings,
     taxes,
     users,
     wishlist,
@@ -34,3 +38,7 @@ api_router.include_router(wishlist.router, prefix="/wishlist", tags=["wishlist"]
 # under /reviews (user-edit/delete + admin CRUD).
 api_router.include_router(reviews.public_router, prefix="/products", tags=["reviews"])
 api_router.include_router(reviews.admin_router, prefix="/reviews", tags=["reviews"])
+api_router.include_router(loyalty.router, prefix="/loyalty", tags=["loyalty"])
+api_router.include_router(audit.router, prefix="/audit-events", tags=["audit"])
+api_router.include_router(settings.router, prefix="/settings", tags=["settings"])
+api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])

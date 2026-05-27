@@ -1,0 +1,155 @@
+"""TOTP / 2FA enrollment + verification.
+
+Flow:
+  1. `start_enrollment(user)`  — generate secret, store encrypted, return the
+     `otpauth://...` URI for the QR code. `totp_enabled` stays False.
+  2. `confirm_enrollment(user, code)` — verify the user can produce a valid
+     code. On success: set totp_enabled=True, mint 10 single-use backup codes,
+     return the cleartext codes ONCE.
+  3. `verify(user, code)` — used during login. Accepts either a TOTP code or
+     a one-time backup code. Backup codes self-consume on use.
+  4. `disable(user)` — clear the secret and flag.
+
+System-level switch lives in `system_settings` under `auth.totp_mode`:
+  - "off"      — feature disabled everywhere
+  - "optional" — users may enable on their own (v1 default)
+
+Forced enrollment (`admin_required`, `all_required`) is intentionally out of
+scope for v1; the column accepts those values for forward-compat.
+"""
+from __future__ import annotations
+
+import hashlib
+import secrets
+from datetime import datetime, timezone
+
+import pyotp
+from sqlalchemy.orm import Session
+
+from app.core.config import settings as env_settings
+from app.core.crypto import decrypt_secret, encrypt_secret
+from app.core.exceptions import ConflictError, ForbiddenError, ValidationError
+from app.models.user import User
+from app.services.settings_service import SettingsService
+
+_BACKUP_CODE_COUNT = 10
+_ISSUER_NAME = "Lumen"
+
+
+def _hash_backup(code: str) -> str:
+    """Backup codes are stored as plain SHA-256 hashes — they're high-entropy
+    one-time strings, no need for bcrypt overhead. Salted with a constant
+    string of the issuer name to keep them tied to this app."""
+    return hashlib.sha256(f"lumen:{code}".encode("utf-8")).hexdigest()
+
+
+def _new_backup_code() -> str:
+    # 10 chars from a 32-char alphabet — ~50 bits of entropy, more than enough
+    # given each code is single-use and rate-limited at login.
+    alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # ambiguous chars dropped
+    return "".join(secrets.choice(alphabet) for _ in range(10))
+
+
+class TotpService:
+    def __init__(self, db: Session):
+        self.db = db
+
+    # ---- System gate ----
+
+    def system_mode(self) -> str:
+        return (SettingsService(self.db).get_raw("auth.totp_mode") or "off").strip().lower()
+
+    def is_enabled_system_wide(self) -> bool:
+        return self.system_mode() != "off"
+
+    def assert_system_enabled(self) -> None:
+        if not self.is_enabled_system_wide():
+            raise ForbiddenError("Two-factor authentication is disabled by the administrator.")
+
+    # ---- Enrollment ----
+
+    def start_enrollment(self, user: User) -> dict:
+        """Generate a new TOTP secret. Stored encrypted; the cleartext is
+        returned ONCE for QR display. Calling this on a user who already
+        finished enrollment is a 409 — they must `disable()` first."""
+        self.assert_system_enabled()
+        if user.totp_enabled:
+            raise ConflictError("Two-factor is already enabled. Disable it first to re-enroll.")
+
+        secret_plain = pyotp.random_base32()
+        user.totp_secret = encrypt_secret(secret_plain)
+        user.totp_enabled = False
+        user.totp_confirmed_at = None
+        user.backup_codes = None
+        self.db.flush()
+
+        totp = pyotp.TOTP(secret_plain)
+        uri = totp.provisioning_uri(name=user.email, issuer_name=_ISSUER_NAME)
+        return {"secret": secret_plain, "otpauth_uri": uri}
+
+    def confirm_enrollment(self, user: User, code: str) -> list[str]:
+        """Confirm enrollment by verifying a fresh TOTP code. Returns the
+        backup codes (cleartext) — caller MUST surface them once and never
+        store them on the client.
+        """
+        self.assert_system_enabled()
+        if not user.totp_secret:
+            raise ValidationError("Start enrollment first.")
+        if user.totp_enabled:
+            raise ConflictError("Two-factor is already enabled.")
+
+        secret = decrypt_secret(user.totp_secret)
+        totp = pyotp.TOTP(secret)
+        # `valid_window=1` accepts the previous and next 30s windows too —
+        # forgiving of small client clock skew without weakening security.
+        if not totp.verify(code.strip(), valid_window=1):
+            raise ValidationError("Code didn't match. Double-check your authenticator.")
+
+        backup_plain = [_new_backup_code() for _ in range(_BACKUP_CODE_COUNT)]
+        user.backup_codes = [_hash_backup(c) for c in backup_plain]
+        user.totp_enabled = True
+        user.totp_confirmed_at = datetime.now(timezone.utc)
+        self.db.flush()
+        return backup_plain
+
+    # ---- Verification (login path) ----
+
+    def verify(self, user: User, code: str) -> bool:
+        """True iff the code is a valid current TOTP OR an unused backup code.
+        Backup codes self-consume on a successful match.
+        """
+        if not user.totp_enabled or not user.totp_secret:
+            return False
+        cleaned = (code or "").strip().replace(" ", "").replace("-", "").upper()
+        if not cleaned:
+            return False
+
+        # Backup codes are 10 chars and alphabetic; TOTP codes are 6 digits.
+        # We try the cheaper check first.
+        if cleaned.isdigit():
+            try:
+                secret = decrypt_secret(user.totp_secret)
+            except ValueError:
+                return False
+            totp = pyotp.TOTP(secret)
+            return totp.verify(cleaned, valid_window=1)
+
+        # Backup-code path
+        if not user.backup_codes:
+            return False
+        target = _hash_backup(cleaned)
+        if target in user.backup_codes:
+            remaining = [c for c in user.backup_codes if c != target]
+            user.backup_codes = remaining
+            self.db.flush()
+            return True
+        return False
+
+    # ---- Disable ----
+
+    def disable(self, user: User) -> None:
+        user.totp_secret = None
+        user.totp_enabled = False
+        user.totp_confirmed_at = None
+        user.backup_codes = None
+        self.db.flush()

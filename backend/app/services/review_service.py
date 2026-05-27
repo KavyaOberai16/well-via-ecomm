@@ -71,9 +71,24 @@ class ReviewService:
             is_approved=True,
         )
         self.reviews.add(review)
+        self.db.flush()  # so review.id is set before loyalty references it
         self._recompute(product)
+        self._award_loyalty_points(review)
         self.db.commit()
         return self.reviews.get(review.id)  # type: ignore[return-value]
+
+    def _award_loyalty_points(self, review) -> None:
+        """Hand the review to the loyalty engine. Lazy import keeps the
+        module dependency direction clean."""
+        from app.services.loyalty_service import LoyaltyService
+        import logging
+
+        try:
+            LoyaltyService(self.db).award_for_review(review)
+        except Exception as exc:
+            logging.getLogger(__name__).warning(
+                "loyalty award failed for review %s: %s", review.id, exc
+            )
 
     def update_own(
         self,

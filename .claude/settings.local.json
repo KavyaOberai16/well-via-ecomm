@@ -81,7 +81,9 @@
       "Bash(docker exec simpleecomers-backend-1 *)",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d['name'], '->', d['price'], 'compare', d['compare_at_price']\\)\")",
       "Bash(python -c \"import sys,json; [print\\(p['id'], p['name'], 'price=', p['price'], 'compare=', p['compare_at_price']\\) for p in json.load\\(sys.stdin\\)['items']]\")",
-      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d['id'], d['name']\\)\")"
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d['id'], d['name']\\)\")",
+      "Bash(findstr /R /C:\"NOTIF\" /C:\"notification\" /C:\"console.*email\" /C:\"console.*sms\" /C:\"order_paid\" /C:\"order_ship\" /C:\"order_deliver\" /C:\"order_refund\" /C:\"Subject:\" /C:\"To:\")",
+      "PowerShell(docker compose logs *)"
     ]
   }
 }

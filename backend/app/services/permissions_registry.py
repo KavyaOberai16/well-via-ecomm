@@ -54,6 +54,19 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
     PermissionDef("reviews.create", "Create reviews on behalf of any author", "Reviews"),
     PermissionDef("reviews.update", "Moderate (edit) reviews", "Reviews"),
     PermissionDef("reviews.delete", "Delete reviews", "Reviews"),
+    # Loyalty
+    PermissionDef("loyalty.view", "View customer loyalty balances + ledgers", "Loyalty"),
+    PermissionDef("loyalty.adjust", "Manually adjust customer points", "Loyalty"),
+    PermissionDef("loyalty.configure", "Manage redemption tiers", "Loyalty"),
+    PermissionDef("referrals.view", "View referral program activity", "Loyalty"),
+    # Audit
+    PermissionDef("audit.view", "View the admin action audit log", "Audit"),
+    # Settings
+    PermissionDef(
+        "settings.manage",
+        "Read & edit runtime system settings (SMTP, SMS, security)",
+        "Settings",
+    ),
 )
 
 

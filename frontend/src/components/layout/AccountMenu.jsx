@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { LogOut, LayoutDashboard, UserRound, Package, Heart } from 'lucide-react';
+import { LogOut, LayoutDashboard, UserRound, Package, Heart, Coins, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils.js';
 import { useAuthStore } from '@/features/auth/store.js';
+import { authApi } from '@/features/auth/api.js';
 
 /**
  * Navbar account control.
@@ -49,8 +50,15 @@ export default function AccountMenu() {
 
   const initial = (user.email || '?').charAt(0).toUpperCase();
 
-  function handleSignOut() {
+  async function handleSignOut() {
     setOpen(false);
+    // Best-effort: tell the server to revoke this refresh-token family. If
+    // the request fails (network drop, server down) we still clear local
+    // state so the device is signed out either way.
+    const rt = useAuthStore.getState().refreshToken;
+    if (rt) {
+      authApi.logout(rt).catch(() => {});
+    }
     logout();
     navigate('/');
   }
@@ -86,6 +94,12 @@ export default function AccountMenu() {
               <p className="truncate text-sm font-medium text-ink-primary">
                 {user.email}
               </p>
+              {typeof user.points_balance === 'number' && (
+                <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-accent">
+                  <Coins className="size-3" aria-hidden="true" />
+                  {user.points_balance.toLocaleString()} pts
+                </p>
+              )}
             </div>
 
             {user.is_admin && (
@@ -118,6 +132,26 @@ export default function AccountMenu() {
             >
               <Heart className="size-4" aria-hidden="true" />
               My wishlist
+            </Link>
+
+            <Link
+              to="/rewards"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-sm px-3 py-2 text-sm text-ink-secondary transition-colors hover:bg-fill hover:text-ink-primary focus-visible:focus-ring"
+            >
+              <Coins className="size-4" aria-hidden="true" />
+              My rewards
+            </Link>
+
+            <Link
+              to="/account/security"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-sm px-3 py-2 text-sm text-ink-secondary transition-colors hover:bg-fill hover:text-ink-primary focus-visible:focus-ring"
+            >
+              <Shield className="size-4" aria-hidden="true" />
+              Security & 2FA
             </Link>
 
             <Link

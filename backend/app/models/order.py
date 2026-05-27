@@ -1,7 +1,8 @@
 import enum
+from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Enum, ForeignKey, Numeric, String
+from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, IDMixin, TimestampMixin
@@ -36,9 +37,30 @@ class Order(Base, IDMixin, TimestampMixin):
     shipping_address: Mapped[str | None] = mapped_column(String(512))
     payment_intent_id: Mapped[str | None] = mapped_column(String(255), unique=True)
 
+    # Fulfillment metadata. Admin writes these when transitioning the status.
+    # `tracking_number` + `carrier` are presentational — the storefront can
+    # show "Shipped via UPS, tracking 1Z..." on the order page.
+    tracking_number: Mapped[str | None] = mapped_column(String(120))
+    carrier: Mapped[str | None] = mapped_column(String(60))
+
+    # Status timestamps. The current `status` is the latest hop; these record
+    # *when* each hop happened. Useful for an audit trail and reporting.
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    shipped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    refunded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # Admin-only annotations. `refund_reason` is a one-liner explaining the
+    # last cancel/refund. `internal_notes` is free-form scratchpad — never
+    # shown to the customer.
+    refund_reason: Mapped[str | None] = mapped_column(String(255))
+    internal_notes: Mapped[str | None] = mapped_column(Text)
+
     items: Mapped[list["OrderItem"]] = relationship(
         back_populates="order", cascade="all, delete-orphan"
     )
+    user: Mapped["User"] = relationship(lazy="joined")  # noqa: F821
 
 
 class OrderItem(Base, IDMixin, TimestampMixin):
