@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Truck, ShieldCheck, Sparkles, PackageX } from 'lucide-react';
 import Hero from '@/components/marketing/Hero.jsx';
+import CategoryMarquee from '@/components/marketing/CategoryMarquee.jsx';
+import BestsellersSection from '@/components/marketing/BestsellersSection.jsx';
 import { Page } from '@/components/layout/Page.jsx';
 import { ProductGrid } from '@/features/products/components/ProductGrid.jsx';
 import { EmptyState } from '@/components/feedback/EmptyState.jsx';
@@ -25,6 +27,10 @@ export default function HomePage() {
   return (
     <Page bleed>
       <Hero />
+
+      <CategoryMarquee />
+
+      <BestsellersSection />
 
       <section className="mx-auto max-w-content px-6">
         {/* Perks band */}

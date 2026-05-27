@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.schemas.cart import CartItemIn, CartRead
+from app.schemas.cart import CartItemIn, CartRead, CouponApplyRequest
 from app.services.cart_service import CartService
 
 router = APIRouter()
@@ -35,3 +35,19 @@ def remove_item(
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT)
 def clear_cart(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     CartService(db).clear(user.id)
+
+
+@router.post("/coupon", response_model=CartRead)
+def apply_coupon(
+    payload: CouponApplyRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return CartService(db).apply_coupon(user.id, payload.code)
+
+
+@router.delete("/coupon", response_model=CartRead)
+def remove_coupon(
+    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    return CartService(db).remove_coupon(user.id)

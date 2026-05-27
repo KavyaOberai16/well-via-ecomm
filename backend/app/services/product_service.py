@@ -31,7 +31,17 @@ class ProductService:
 
     def update(self, product_id: int, data: ProductUpdate) -> Product:
         product = self.get(product_id)
-        for key, value in data.model_dump(exclude_unset=True).items():
+        patch = data.model_dump(exclude_unset=True)
+
+        # Validate against the post-patch state: the new compare_at_price must
+        # exceed the new price (which may itself come from the patch or remain
+        # the existing value). Schema-level validation can't see the row.
+        effective_price = patch.get("price", product.price)
+        effective_compare = patch.get("compare_at_price", product.compare_at_price)
+        if effective_compare is not None and effective_compare <= effective_price:
+            raise ValidationError("compare_at_price must be greater than price")
+
+        for key, value in patch.items():
             setattr(product, key, value)
         self.db.commit()
         return self.get(product_id)
@@ -47,6 +57,77 @@ class ProductService:
         self, *, q: str | None, category_id: int | None, offset: int, limit: int
     ) -> tuple[list[Product], int]:
         return self.repo.search(q=q, category_id=category_id, offset=offset, limit=limit)
+
+    def bestsellers(self, *, limit: int = 8) -> list[Product]:
+        """Top sellers, with a graceful fallback for fresh catalogs.
+
+        On a brand-new store with zero qualifying orders, returning an empty
+        list would make the homepage section disappear. Fall back to the most
+        recently added products instead, so the section is never empty.
+        """
+        items = self.repo.bestsellers(limit=limit)
+        if items:
+            return items
+        return self.repo.newest(limit=limit)
+
+    def co_purchased(self, product_id: int, *, limit: int = 12) -> list[Product]:
+        """Items bought in the same orders as this one. Falls back to related
+        when the product has no co-purchase history yet so the rail still has
+        content on a fresh catalog."""
+        # Ensures the product exists (raises NotFoundError otherwise).
+        self.get(product_id)
+        items = self.repo.co_purchased(product_id=product_id, limit=limit)
+        if items:
+            return items
+        return self.related(product_id, limit=limit)
+
+    def likely_to_buy(self, product_id: int, *, limit: int = 12) -> list[Product]:
+        """Bestsellers scoped to the product's category, with sensible fallbacks.
+
+        Order of preference:
+          1. Top sellers within the same category (excluding self)
+          2. Top sellers overall (excluding self)
+          3. Newest products (so the rail is never empty on a fresh store)
+        """
+        product = self.get(product_id)
+        category_id = product.category_id
+
+        if category_id is not None:
+            scoped = self.repo.bestsellers(limit=limit + 1, category_id=category_id)
+            scoped = [p for p in scoped if p.id != product_id][:limit]
+            if scoped:
+                return scoped
+
+        overall = self.repo.bestsellers(limit=limit + 1)
+        overall = [p for p in overall if p.id != product_id][:limit]
+        if overall:
+            return overall
+
+        newest = self.repo.newest(limit=limit + 1)
+        return [p for p in newest if p.id != product_id][:limit]
+
+    def by_ids(self, ids: list[int]) -> list[Product]:
+        return self.repo.by_ids(ids)
+
+    def related(self, product_id: int, *, limit: int = 8) -> list[Product]:
+        """Products to surface alongside this one — same category, excluding self.
+
+        Falls back to newest products overall if the source product has no
+        category, so the rail is never empty on a fresh catalog.
+        """
+        product = self.get(product_id)
+        candidates, _ = self.repo.search(
+            q=None,
+            category_id=product.category_id,
+            offset=0,
+            limit=limit + 1,
+        )
+        related = [p for p in candidates if p.id != product.id][:limit]
+        if not related and product.category_id is not None:
+            # Category had only this product — widen to anything else.
+            candidates, _ = self.repo.search(q=None, category_id=None, offset=0, limit=limit + 1)
+            related = [p for p in candidates if p.id != product.id][:limit]
+        return related
 
     # ---- Images ----
 

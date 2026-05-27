@@ -12,6 +12,7 @@ import { cn, formatPrice, stockLabel } from '@/lib/utils.js';
 import { Badge } from '@/components/ui/Badge.jsx';
 import { fadeUp } from '@/lib/motion.js';
 import { ProductMedia } from './ProductMedia.jsx';
+import { WishlistButton } from '@/features/wishlist/WishlistButton.jsx';
 
 /**
  * Animated product card — subtle pointer-driven 3D tilt (<= 6 deg), media zoom,
@@ -31,6 +32,14 @@ export function ProductCard({ product, onQuickAdd }) {
 
   const outOfStock = product.stock <= 0;
   const stock = stockLabel(product.stock);
+  // Defensive: server enforces compare_at_price > price, but coerce to numbers
+  // so a string payload (Decimal serializes as string) is still compared right.
+  const priceNum = Number(product.price);
+  const compareNum = Number(product.compare_at_price);
+  const onSale =
+    product.compare_at_price != null &&
+    Number.isFinite(compareNum) &&
+    compareNum > priceNum;
 
   function handleMove(e) {
     if (reduce || !ref.current) return;
@@ -81,8 +90,19 @@ export function ProductCard({ product, onQuickAdd }) {
               />
             </motion.div>
 
-            <div className="absolute left-3 top-3">
+            <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+              {onSale && (
+                <Badge tone="danger" className="bg-danger text-white">
+                  Sale
+                </Badge>
+              )}
               <Badge tone={stock.tone}>{stock.text}</Badge>
+            </div>
+
+            {/* Wishlist heart — overlay, top-right. Click is captured so it
+                does not trigger the surrounding link's navigation. */}
+            <div className="absolute right-3 top-3">
+              <WishlistButton productId={product.id} variant="overlay" size="sm" />
             </div>
 
             {/* Quick add — fades in on hover, available to keyboard always */}
@@ -119,9 +139,23 @@ export function ProductCard({ product, onQuickAdd }) {
             <h3 className="line-clamp-2 text-sm font-semibold text-ink-primary">
               {product.name}
             </h3>
-            <p className="mt-1 text-h3 text-ink-primary">
-              {formatPrice(product.price)}
-            </p>
+            {onSale ? (
+              <p className="mt-1 flex items-baseline gap-2">
+                <s
+                  className="text-sm text-ink-tertiary"
+                  aria-label={`Was ${formatPrice(product.compare_at_price)}`}
+                >
+                  {formatPrice(product.compare_at_price)}
+                </s>
+                <span className="text-h3 text-danger">
+                  {formatPrice(product.price)}
+                </span>
+              </p>
+            ) : (
+              <p className="mt-1 text-h3 text-ink-primary">
+                {formatPrice(product.price)}
+              </p>
+            )}
           </div>
         </Link>
       </motion.div>

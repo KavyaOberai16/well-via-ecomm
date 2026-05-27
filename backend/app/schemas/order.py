@@ -31,7 +31,11 @@ class OrderRead(BaseModel):
     id: int
     user_id: int
     status: OrderStatus
+    subtotal: Decimal = Decimal("0")
+    tax_amount: Decimal = Decimal("0")
+    discount_amount: Decimal = Decimal("0")
     total_amount: Decimal
+    coupon_code: str | None = None
     currency: str
     shipping_address: str | None
     items: list[OrderItemRead]

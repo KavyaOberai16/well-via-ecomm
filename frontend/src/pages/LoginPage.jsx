@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Sparkles } from 'lucide-react';
@@ -40,6 +40,8 @@ export default function LoginPage() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
+  const [search] = useSearchParams();
+  const nextUrl = search.get('next');
   const setSession = useAuthStore((s) => s.setSession);
   const setUser = useAuthStore((s) => s.setUser);
   const currentUser = useAuthStore((s) => s.user);
@@ -79,7 +81,10 @@ export default function LoginPage() {
       } catch {
         /* profile is non-critical for storefront use */
       }
-      navigate(profile?.is_admin ? '/admin' : '/');
+      // Respect ?next= if the visitor was sent here from a deep link
+      // (e.g. "Buy Now" → /login?next=/checkout?...). Only honor local paths.
+      const safeNext = nextUrl && nextUrl.startsWith('/') ? nextUrl : null;
+      navigate(safeNext ?? (profile?.is_admin ? '/admin' : '/'));
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Something went wrong. Try again.');
     } finally {
@@ -88,7 +93,8 @@ export default function LoginPage() {
   }
 
   if (currentUser) {
-    return <Navigate to="/" replace />;
+    const safeNext = nextUrl && nextUrl.startsWith('/') ? nextUrl : '/';
+    return <Navigate to={safeNext} replace />;
   }
 
   return (

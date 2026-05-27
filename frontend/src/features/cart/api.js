@@ -6,4 +6,9 @@ export const cartApi = {
     apiClient.post('/cart/items', { product_id, quantity }),
   removeItem: (product_id) => apiClient.delete(`/cart/items/${product_id}`),
   clear: () => apiClient.delete('/cart'),
+
+  applyCoupon: (code) =>
+    apiClient.post('/cart/coupon', { code }).then((r) => r.data),
+  removeCoupon: () =>
+    apiClient.delete('/cart/coupon').then((r) => r.data),
 };

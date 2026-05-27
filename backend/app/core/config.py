@@ -70,6 +70,18 @@ class Settings(BaseSettings):
     GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/google/callback"
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # Payments. PAYMENT_PROVIDER: "mock" (dev: local simulator) or "phonepe" (real).
+    # PHONEPE_ENV: "sandbox" or "production" — selects the PhonePe API base URL.
+    # PAYMENT_RETURN_URL is where PhonePe sends the user's browser back to after
+    # the payment screen; the frontend route there polls /payments/{txn}/status.
+    PAYMENT_PROVIDER: str = "mock"
+    PHONEPE_ENV: str = "sandbox"
+    PHONEPE_MERCHANT_ID: str = ""
+    PHONEPE_SALT_KEY: str = ""
+    PHONEPE_SALT_INDEX: int = 1
+    PAYMENT_RETURN_URL: str = "http://localhost:5173/payments/return"
+    PAYMENT_WEBHOOK_URL: str = "http://localhost:8000/api/v1/payments/webhook/phonepe"
+
     @computed_field
     @property
     def DATABASE_URL(self) -> str:

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { LogOut, LayoutDashboard, UserRound } from 'lucide-react';
+import { LogOut, LayoutDashboard, UserRound, Package, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils.js';
 import { useAuthStore } from '@/features/auth/store.js';
 
@@ -108,6 +108,26 @@ export default function AccountMenu() {
             >
               <UserRound className="size-4" aria-hidden="true" />
               My cart
+            </Link>
+
+            <Link
+              to="/wishlist"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-sm px-3 py-2 text-sm text-ink-secondary transition-colors hover:bg-fill hover:text-ink-primary focus-visible:focus-ring"
+            >
+              <Heart className="size-4" aria-hidden="true" />
+              My wishlist
+            </Link>
+
+            <Link
+              to="/orders"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-sm px-3 py-2 text-sm text-ink-secondary transition-colors hover:bg-fill hover:text-ink-primary focus-visible:focus-ring"
+            >
+              <Package className="size-4" aria-hidden="true" />
+              My orders
             </Link>
 
             <button

@@ -40,3 +40,20 @@ def require_admin(user: User = Depends(get_current_user)) -> User:
     if not user.is_admin:
         raise ForbiddenError("Admin privileges required")
     return user
+
+
+def require_permission(permission: str):
+    """Dependency factory for fine-grained permission checks.
+
+    Usage:  Depends(require_permission("products.create"))
+
+    is_admin users bypass the check (see User.has_permission). This keeps the
+    legacy admin flag working while opt-in RBAC layers on for non-admin staff.
+    """
+
+    def _checker(user: User = Depends(get_current_user)) -> User:
+        if not user.has_permission(permission):
+            raise ForbiddenError(f"Missing required permission: {permission}")
+        return user
+
+    return _checker

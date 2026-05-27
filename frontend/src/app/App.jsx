@@ -4,7 +4,9 @@ import { Routes, Route } from 'react-router-dom';
 import Layout from '@/components/layout/Layout.jsx';
 import AdminLayout from '@/components/admin/AdminLayout.jsx';
 import RequireAdmin from './RequireAdmin.jsx';
+import RequirePermission from './RequirePermission.jsx';
 import ScrollToTop from './ScrollToTop.jsx';
+import AuthBootstrap from './AuthBootstrap.jsx';
 import { PageFallback } from '@/components/feedback/PageFallback.jsx';
 
 // Route-based code splitting — each page is its own chunk.
@@ -12,6 +14,11 @@ const HomePage = lazy(() => import('@/pages/HomePage.jsx'));
 const ProductListPage = lazy(() => import('@/pages/ProductListPage.jsx'));
 const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage.jsx'));
 const CartPage = lazy(() => import('@/pages/CartPage.jsx'));
+const CheckoutPage = lazy(() => import('@/pages/CheckoutPage.jsx'));
+const PaymentMockPage = lazy(() => import('@/pages/PaymentMockPage.jsx'));
+const PaymentReturnPage = lazy(() => import('@/pages/PaymentReturnPage.jsx'));
+const OrdersPage = lazy(() => import('@/pages/OrdersPage.jsx'));
+const WishlistPage = lazy(() => import('@/pages/WishlistPage.jsx'));
 const LoginPage = lazy(() => import('@/pages/LoginPage.jsx'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage.jsx'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage.jsx'));
@@ -21,11 +28,18 @@ const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage.j
 const AdminProductsPage = lazy(() => import('@/pages/admin/AdminProductsPage.jsx'));
 const AdminProductFormPage = lazy(() => import('@/pages/admin/AdminProductFormPage.jsx'));
 const AdminCategoriesPage = lazy(() => import('@/pages/admin/AdminCategoriesPage.jsx'));
+const AdminHeroSlidesPage = lazy(() => import('@/pages/admin/AdminHeroSlidesPage.jsx'));
+const AdminCouponsPage = lazy(() => import('@/pages/admin/AdminCouponsPage.jsx'));
+const AdminRolesPage = lazy(() => import('@/pages/admin/AdminRolesPage.jsx'));
+const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage.jsx'));
+const AdminTaxesPage = lazy(() => import('@/pages/admin/AdminTaxesPage.jsx'));
+const AdminReviewsPage = lazy(() => import('@/pages/admin/AdminReviewsPage.jsx'));
 
 export default function App() {
   return (
     <>
       <ScrollToTop />
+      <AuthBootstrap />
       <Suspense fallback={<PageFallback />}>
         <Routes>
           {/* Storefront */}
@@ -34,6 +48,11 @@ export default function App() {
             <Route path="products" element={<ProductListPage />} />
             <Route path="products/:id" element={<ProductDetailPage />} />
             <Route path="cart" element={<CartPage />} />
+            <Route path="wishlist" element={<WishlistPage />} />
+            <Route path="checkout" element={<CheckoutPage />} />
+            <Route path="orders" element={<OrdersPage />} />
+            <Route path="payments/mock/:txnId" element={<PaymentMockPage />} />
+            <Route path="payments/return" element={<PaymentReturnPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
             <Route path="auth/callback" element={<AuthCallbackPage />} />
@@ -53,6 +72,47 @@ export default function App() {
             <Route path="admin/products/new" element={<AdminProductFormPage />} />
             <Route path="admin/products/:id/edit" element={<AdminProductFormPage />} />
             <Route path="admin/categories" element={<AdminCategoriesPage />} />
+            <Route path="admin/hero" element={<AdminHeroSlidesPage />} />
+            <Route
+              path="admin/coupons"
+              element={
+                <RequirePermission permission="coupons.view">
+                  <AdminCouponsPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/roles"
+              element={
+                <RequirePermission permission="roles.view">
+                  <AdminRolesPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/users"
+              element={
+                <RequirePermission permission="users.view">
+                  <AdminUsersPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/taxes"
+              element={
+                <RequirePermission permission="taxes.view">
+                  <AdminTaxesPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/reviews"
+              element={
+                <RequirePermission permission="reviews.view">
+                  <AdminReviewsPage />
+                </RequirePermission>
+              }
+            />
           </Route>
         </Routes>
       </Suspense>

@@ -1,9 +1,16 @@
-from decimal import Decimal
+from __future__ import annotations
 
-from sqlalchemy import Boolean, ForeignKey, Numeric, String, Text
+from decimal import Decimal
+from typing import TYPE_CHECKING
+
+from sqlalchemy import JSON, Boolean, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, IDMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.review import Review
+    from app.models.tax import Tax
 
 
 class Category(Base, IDMixin, TimestampMixin):
@@ -22,6 +29,9 @@ class Product(Base, IDMixin, TimestampMixin):
     name: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     price: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    # When set and greater than `price`, the storefront renders this as a
+    # strikethrough "compare at" / "was" price next to a Sale badge.
+    compare_at_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     stock: Mapped[int] = mapped_column(default=0, nullable=False)
     # Denormalized primary image — kept in sync with the primary ProductImage
     # so listing/card queries stay cheap.
@@ -36,6 +46,26 @@ class Product(Base, IDMixin, TimestampMixin):
         back_populates="product",
         cascade="all, delete-orphan",
         order_by="ProductImage.position",
+    )
+
+    # Per-product tax. Multiple taxes are summed (e.g. GST + cess).
+    taxes: Mapped[list["Tax"]] = relationship(
+        secondary="product_taxes", back_populates="products", lazy="selectin"
+    )
+
+    # Denormalized rating aggregates — recomputed by ReviewService on every
+    # review mutation. Listed alongside the product so listing/card queries
+    # don't need to AVG() across reviews on the read path.
+    rating_avg: Mapped[Decimal] = mapped_column(
+        Numeric(3, 2), nullable=False, default=Decimal("0.00")
+    )
+    rating_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # Map of "1".."5" -> count. Stored as JSON for cheap one-shot fetch of the
+    # 5-bar histogram. Null is treated as "no reviews yet" in the schema layer.
+    rating_distribution: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    reviews: Mapped[list["Review"]] = relationship(
+        back_populates="product", cascade="all, delete-orphan"
     )
 
 

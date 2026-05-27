@@ -23,7 +23,15 @@ class Order(Base, IDMixin, TimestampMixin):
     status: Mapped[OrderStatus] = mapped_column(
         Enum(OrderStatus), default=OrderStatus.PENDING, nullable=False, index=True
     )
+    # subtotal = sum(unit_price * qty) before tax/discount
+    # tax_amount = sum of taxes applied at order time (snapshotted from product.taxes)
+    # discount_amount = coupon-derived discount (snapshotted)
+    # total_amount = grand total = subtotal + tax_amount - discount_amount
+    subtotal: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    tax_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    discount_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     total_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    coupon_code: Mapped[str | None] = mapped_column(String(64))
     currency: Mapped[str] = mapped_column(String(3), default="USD", nullable=False)
     shipping_address: Mapped[str | None] = mapped_column(String(512))
     payment_intent_id: Mapped[str | None] = mapped_column(String(255), unique=True)

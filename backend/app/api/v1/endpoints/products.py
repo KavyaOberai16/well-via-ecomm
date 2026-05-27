@@ -29,9 +29,71 @@ def list_products(
     )
 
 
+@router.get("/bestsellers", response_model=list[ProductRead])
+def bestsellers(
+    limit: int = Query(default=8, ge=1, le=24),
+    db: Session = Depends(get_db),
+):
+    """Top products by units sold; falls back to newest when no orders yet."""
+    items = ProductService(db).bestsellers(limit=limit)
+    return [ProductRead.model_validate(i) for i in items]
+
+
+@router.get("/by-ids/batch", response_model=list[ProductRead])
+def products_by_ids(
+    ids: str = Query(..., description="Comma-separated product ids, preserves order"),
+    db: Session = Depends(get_db),
+):
+    """Bulk product lookup. Backs the browsing-history rail — the client sends
+    its locally-stored last-viewed ids and gets back full product objects in
+    the same order."""
+    try:
+        id_list = [int(x) for x in ids.split(",") if x.strip()]
+    except ValueError:
+        return []
+    if not id_list:
+        return []
+    # Cap to keep the request bounded.
+    id_list = id_list[:24]
+    items = ProductService(db).by_ids(id_list)
+    return [ProductRead.model_validate(i) for i in items]
+
+
 @router.get("/{product_id}", response_model=ProductRead)
 def get_product(product_id: int, db: Session = Depends(get_db)):
     return ProductService(db).get(product_id)
+
+
+@router.get("/{product_id}/related", response_model=list[ProductRead])
+def related_products(
+    product_id: int,
+    limit: int = Query(default=8, ge=1, le=24),
+    db: Session = Depends(get_db),
+):
+    items = ProductService(db).related(product_id, limit=limit)
+    return [ProductRead.model_validate(i) for i in items]
+
+
+@router.get("/{product_id}/co-purchased", response_model=list[ProductRead])
+def co_purchased_products(
+    product_id: int,
+    limit: int = Query(default=12, ge=1, le=24),
+    db: Session = Depends(get_db),
+):
+    """Products customers bought alongside this one."""
+    items = ProductService(db).co_purchased(product_id, limit=limit)
+    return [ProductRead.model_validate(i) for i in items]
+
+
+@router.get("/{product_id}/likely", response_model=list[ProductRead])
+def likely_to_buy(
+    product_id: int,
+    limit: int = Query(default=12, ge=1, le=24),
+    db: Session = Depends(get_db),
+):
+    """Items customers are likely to buy — bestsellers in the same category."""
+    items = ProductService(db).likely_to_buy(product_id, limit=limit)
+    return [ProductRead.model_validate(i) for i in items]
 
 
 @router.post(

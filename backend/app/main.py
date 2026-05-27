@@ -1,3 +1,4 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 
@@ -10,11 +11,22 @@ from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import RequestIDMiddleware
+from app.db.session import SessionLocal
+from app.services.rbac_seed import seed_rbac
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
+    # Bootstrap RBAC. Idempotent so it's safe on every boot. Failures don't
+    # abort startup — the API still works; the admin just sees no perms.
+    try:
+        with SessionLocal() as db:
+            seed_rbac(db)
+    except Exception as exc:
+        logger.warning("RBAC seed skipped: %s", exc)
     yield
 
 

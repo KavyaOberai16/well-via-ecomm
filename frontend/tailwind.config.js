@@ -70,9 +70,14 @@ export default {
         shimmer: {
           '100%': { transform: 'translateX(100%)' },
         },
+        marquee: {
+          '0%': { transform: 'translate3d(0,0,0)' },
+          '100%': { transform: 'translate3d(-50%,0,0)' },
+        },
       },
       animation: {
         shimmer: 'shimmer 1.4s infinite',
+        marquee: 'marquee 60s linear infinite',
       },
     },
   },

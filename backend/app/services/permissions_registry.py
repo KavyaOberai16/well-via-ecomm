@@ -1,0 +1,61 @@
+"""Canonical permission list.
+
+The seeder upserts these on app startup so new perms become available without
+manual SQL. Adding one here is the single source of truth — referenced from
+require_permission("...") and the admin UI.
+"""
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class PermissionDef:
+    name: str
+    description: str
+    group: str
+
+
+PERMISSIONS: tuple[PermissionDef, ...] = (
+    # Products
+    PermissionDef("products.view", "View products in admin", "Products"),
+    PermissionDef("products.create", "Create products", "Products"),
+    PermissionDef("products.update", "Update products", "Products"),
+    PermissionDef("products.delete", "Delete products", "Products"),
+    # Categories
+    PermissionDef("categories.view", "View categories", "Categories"),
+    PermissionDef("categories.create", "Create categories", "Categories"),
+    PermissionDef("categories.update", "Update categories", "Categories"),
+    PermissionDef("categories.delete", "Delete categories", "Categories"),
+    # Orders
+    PermissionDef("orders.view_all", "View all orders (not just own)", "Orders"),
+    PermissionDef("orders.update_status", "Update order status", "Orders"),
+    PermissionDef("orders.refund", "Issue refunds", "Orders"),
+    # Users / RBAC
+    PermissionDef("users.view", "View users", "Users"),
+    PermissionDef("users.update", "Update users (activate/deactivate)", "Users"),
+    PermissionDef("users.assign_role", "Assign roles to users", "Users"),
+    PermissionDef("roles.view", "View roles & permissions", "RBAC"),
+    PermissionDef("roles.create", "Create roles", "RBAC"),
+    PermissionDef("roles.update", "Update roles (incl. permissions)", "RBAC"),
+    PermissionDef("roles.delete", "Delete roles", "RBAC"),
+    # Hero slides
+    PermissionDef("hero_slides.manage", "Manage hero slides", "Hero Slides"),
+    # Coupons
+    PermissionDef("coupons.view", "View coupons", "Coupons"),
+    PermissionDef("coupons.create", "Create coupons", "Coupons"),
+    PermissionDef("coupons.update", "Update coupons", "Coupons"),
+    PermissionDef("coupons.delete", "Delete coupons", "Coupons"),
+    # Taxes
+    PermissionDef("taxes.view", "View tax rates", "Taxes"),
+    PermissionDef("taxes.create", "Create tax rates", "Taxes"),
+    PermissionDef("taxes.update", "Update tax rates", "Taxes"),
+    PermissionDef("taxes.delete", "Delete tax rates", "Taxes"),
+    # Reviews
+    PermissionDef("reviews.view", "View all reviews in admin", "Reviews"),
+    PermissionDef("reviews.create", "Create reviews on behalf of any author", "Reviews"),
+    PermissionDef("reviews.update", "Moderate (edit) reviews", "Reviews"),
+    PermissionDef("reviews.delete", "Delete reviews", "Reviews"),
+)
+
+
+def all_permission_names() -> list[str]:
+    return [p.name for p in PERMISSIONS]
