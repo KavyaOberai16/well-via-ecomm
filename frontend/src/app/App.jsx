@@ -41,6 +41,7 @@ const AdminAuditPage = lazy(() => import('@/pages/admin/AdminAuditPage.jsx'));
 const AdminSettingsPage = lazy(() => import('@/pages/admin/AdminSettingsPage.jsx'));
 const AdminOrdersPage = lazy(() => import('@/pages/admin/AdminOrdersPage.jsx'));
 const AdminOrderDetailPage = lazy(() => import('@/pages/admin/AdminOrderDetailPage.jsx'));
+const AdminReturnsPage = lazy(() => import('@/pages/admin/AdminReturnsPage.jsx'));
 
 export default function App() {
   return (
@@ -94,6 +95,14 @@ export default function App() {
               element={
                 <RequirePermission permission="orders.view_all">
                   <AdminOrderDetailPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/returns"
+              element={
+                <RequirePermission permission="returns.view_all">
+                  <AdminReturnsPage />
                 </RequirePermission>
               }
             />

@@ -15,6 +15,13 @@ import {
   TicketPercent,
   AlertTriangle,
   Save,
+  Send,
+  ExternalLink,
+  Calendar,
+  Printer,
+  RefreshCw,
+  Activity,
+  FlaskConical,
 } from 'lucide-react';
 import { AdminPage } from '@/components/admin/AdminPage.jsx';
 import { Button } from '@/components/ui/Button.jsx';
@@ -28,10 +35,15 @@ import {
   useAdminOrder,
   useCancelOrder,
   useDeliverOrder,
+  useMockSimulate,
+  usePushToCarrier,
   useRefundOrder,
+  useSchedulePickup,
   useShipOrder,
+  useSyncTracking,
   useUpdateOrderNotes,
 } from '@/features/admin-orders/hooks.js';
+import { adminOrdersApi } from '@/features/admin-orders/api.js';
 
 const STATUS_CLASS = {
   pending:   'bg-fill text-ink-secondary',
@@ -195,6 +207,308 @@ function ReasonModal({ title, action, onClose, onSubmit, pending }) {
           </Button>
         </div>
       </Card>
+    </div>
+  );
+}
+
+// Default to tomorrow at 10:00 in the local timezone for the date picker.
+function defaultPickupDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  // Format YYYY-MM-DD for <input type="date">.
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function ShipmentPanel({ order }) {
+  const push = usePushToCarrier();
+  const schedule = useSchedulePickup();
+  const sync = useSyncTracking();
+  const [error, setError] = useState(null);
+  const [pickupDate, setPickupDate] = useState(defaultPickupDate);
+  const [labelLoading, setLabelLoading] = useState(false);
+
+  const hasAwb = !!order.shipping_awb;
+  const hasPickup = !!order.pickup_id;
+  const canPush = !hasAwb && order.status === 'paid';
+
+  async function handlePush() {
+    setError(null);
+    try {
+      await push.mutateAsync(order.id);
+    } catch (err) {
+      setError(
+        err.response?.data?.error?.message || 'Could not push to carrier.',
+      );
+    }
+  }
+
+  async function handleSchedule() {
+    setError(null);
+    if (!pickupDate) {
+      setError('Pick a date first.');
+      return;
+    }
+    try {
+      // Submit at noon UTC of the chosen date — the carrier rounds to a slot
+      // anyway, and we just need a deterministic timestamp.
+      const iso = new Date(`${pickupDate}T12:00:00Z`).toISOString();
+      await schedule.mutateAsync({ id: order.id, pickup_date: iso });
+    } catch (err) {
+      setError(
+        err.response?.data?.error?.message || 'Could not schedule pickup.',
+      );
+    }
+  }
+
+  async function handleSync() {
+    setError(null);
+    try {
+      await sync.mutateAsync(order.id);
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Could not sync tracking.');
+    }
+  }
+
+  async function handleLabel() {
+    setError(null);
+    setLabelLoading(true);
+    try {
+      const blob = await adminOrdersApi.fetchLabel(order.id);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      // Defer the revoke so the new tab has time to read the URL. 60s is
+      // generous — most browsers latch the resource on document load.
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      setError(
+        err.response?.data?.error?.message || 'Could not fetch the label.',
+      );
+    } finally {
+      setLabelLoading(false);
+    }
+  }
+
+  return (
+    <Card className="p-5">
+      <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-ink-tertiary">
+        <Truck className="size-3.5" /> Carrier shipment
+      </p>
+
+      {hasAwb ? (
+        <div className="mt-3 space-y-3">
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
+                {order.shipping_provider}
+              </span>
+              <span className="text-[11px] text-ink-tertiary">
+                {formatDateTime(order.shipment_created_at)}
+              </span>
+            </div>
+            <p className="mt-1 break-all font-mono text-xs text-ink-primary">
+              {order.shipping_awb}
+            </p>
+          </div>
+
+          <Button
+            size="sm"
+            variant="secondary"
+            block
+            onClick={handleLabel}
+            loading={labelLoading}
+          >
+            <Printer className="size-4" /> Print label
+          </Button>
+
+          <div className="border-t border-line-subtle pt-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary">
+              Pickup
+            </p>
+            {hasPickup ? (
+              <div className="mt-1.5 text-xs text-ink-secondary">
+                <p className="font-mono text-ink-primary">{order.pickup_id}</p>
+                <p className="mt-0.5 inline-flex items-center gap-1">
+                  <Calendar className="size-3" aria-hidden="true" />
+                  {formatDateTime(order.pickup_scheduled_for)}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="date"
+                  value={pickupDate}
+                  onChange={(e) => setPickupDate(e.target.value)}
+                  min={defaultPickupDate()}
+                  className="flex-1 rounded-sm border border-line-subtle bg-bg-elevated px-2 py-1 text-xs text-ink-primary focus-visible:focus-ring"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleSchedule}
+                  loading={schedule.isPending}
+                >
+                  Schedule
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-line-subtle pt-3">
+            <div className="flex items-center justify-between">
+              <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary">
+                <Activity className="size-3" /> Tracking
+              </p>
+              <button
+                type="button"
+                onClick={handleSync}
+                disabled={sync.isPending}
+                className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline disabled:opacity-50"
+              >
+                <RefreshCw className={cn('size-3', sync.isPending && 'animate-spin')} />
+                Sync
+              </button>
+            </div>
+            {order.last_tracking_at && (
+              <p className="mt-1 text-[10px] text-ink-tertiary">
+                Last update {formatDateTime(order.last_tracking_at)}
+              </p>
+            )}
+            <div className="mt-2">
+              <TrackingTimeline events={order.tracking_events} />
+            </div>
+            {order.shipping_provider === 'mock' && <MockSimulator order={order} />}
+          </div>
+
+          {error && <p className="text-xs text-danger">{error}</p>}
+        </div>
+      ) : canPush ? (
+        <div className="mt-3">
+          <p className="text-xs text-ink-secondary">
+            Push this order to the active shipping provider to mint a waybill.
+          </p>
+          {error && <p className="mt-2 text-xs text-danger">{error}</p>}
+          <Button
+            size="sm"
+            className="mt-3"
+            onClick={handlePush}
+            loading={push.isPending}
+          >
+            <Send className="size-4" /> Push to carrier
+          </Button>
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-ink-tertiary">
+          {order.status === 'paid'
+            ? 'Configure a shipping provider in Settings to push this order.'
+            : `Available once the order reaches PAID (currently ${order.status}).`}
+        </p>
+      )}
+    </Card>
+  );
+}
+
+// Visual mapping of normalized TrackingStatus -> color hint for the bullet.
+const TRACKING_TONE = {
+  created: 'bg-fill text-ink-tertiary',
+  picked_up: 'bg-blue-500/20 text-blue-400',
+  in_transit: 'bg-blue-500/20 text-blue-400',
+  out_for_delivery: 'bg-accent/20 text-accent',
+  delivered: 'bg-success/20 text-success',
+  failed: 'bg-warning/20 text-warning',
+  returned: 'bg-warning/20 text-warning',
+  cancelled: 'bg-danger/20 text-danger',
+};
+
+function humanizeStatus(s) {
+  return (s || '').replace(/_/g, ' ');
+}
+
+function TrackingTimeline({ events }) {
+  if (!events || events.length === 0) {
+    return (
+      <p className="text-xs text-ink-tertiary">
+        No tracking events yet. The carrier will push updates here.
+      </p>
+    );
+  }
+  // Most-recent first reads better in a UI even though we store ascending.
+  const ordered = [...events].sort((a, b) =>
+    (b.occurred_at || '').localeCompare(a.occurred_at || ''),
+  );
+  return (
+    <ol className="flex flex-col gap-1.5">
+      {ordered.map((e, i) => (
+        <li
+          key={`${e.status}-${e.occurred_at}-${i}`}
+          className="flex items-start gap-2 rounded-sm border border-line-subtle bg-bg-sunken px-2.5 py-2 text-xs"
+        >
+          <span
+            className={cn(
+              'mt-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+              TRACKING_TONE[e.status] || 'bg-fill text-ink-tertiary',
+            )}
+          >
+            {humanizeStatus(e.status)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-ink-primary">{e.note || e.location || '—'}</p>
+            <p className="mt-0.5 text-[10px] tabular-nums text-ink-tertiary">
+              {formatDateTime(e.occurred_at)}
+              {e.location && e.note ? ` · ${e.location}` : ''}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function MockSimulator({ order }) {
+  // Only renders inside ShipmentPanel when shipping_provider === 'mock'.
+  const [status, setStatus] = useState('in_transit');
+  const sim = useMockSimulate();
+  const [error, setError] = useState(null);
+
+  async function fire() {
+    setError(null);
+    try {
+      await sim.mutateAsync({
+        id: order.id,
+        awb: order.shipping_awb,
+        status,
+        note: `Simulated ${status}`,
+      });
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Simulation failed.');
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-sm border border-dashed border-line-strong bg-bg-elevated px-2.5 py-2">
+      <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-tertiary">
+        <FlaskConical className="size-3" /> Mock simulator
+      </p>
+      <div className="mt-2 flex items-center gap-2">
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="flex-1 rounded-sm border border-line-subtle bg-bg-sunken px-2 py-1 text-xs text-ink-primary"
+        >
+          {['picked_up', 'in_transit', 'out_for_delivery', 'delivered', 'returned', 'failed'].map(
+            (s) => (
+              <option key={s} value={s}>
+                {humanizeStatus(s)}
+              </option>
+            ),
+          )}
+        </select>
+        <Button size="sm" variant="secondary" onClick={fire} loading={sim.isPending}>
+          Fire
+        </Button>
+      </div>
+      {error && <p className="mt-1 text-[11px] text-danger">{error}</p>}
     </div>
   );
 }
@@ -501,6 +815,8 @@ export default function AdminOrderDetailPage() {
               {order.payment_intent_id || '—'}
             </p>
           </Card>
+
+          <ShipmentPanel order={order} />
 
           <Card className="p-5">
             <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-ink-tertiary">

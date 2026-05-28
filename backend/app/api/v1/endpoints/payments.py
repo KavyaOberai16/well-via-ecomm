@@ -38,7 +38,17 @@ def start_checkout(
 ):
     svc = PaymentService(db)
     order, mtid, redirect_url = svc.checkout(user, payload)
-    amount_minor = int((order.total_amount * 100).to_integral_value())
+    # `amount_minor` is what the gateway was asked to charge — for COD the
+    # gateway wasn't called at all (0) and for Split COD it's only the
+    # prepaid portion (total − balance). Prepaid orders carry the full total.
+    from decimal import Decimal as _Decimal
+    if order.payment_method == "cod":
+        gateway_amount = _Decimal("0")
+    elif order.payment_method == "split_cod":
+        gateway_amount = _Decimal(order.total_amount) - _Decimal(order.cod_balance)
+    else:
+        gateway_amount = _Decimal(order.total_amount)
+    amount_minor = int((gateway_amount * 100).to_integral_value())
     return CheckoutResponse(
         order_id=order.id,
         merchant_transaction_id=mtid,

@@ -68,3 +68,37 @@ export function useUpdateOrderNotes() {
     onSuccess: (_d, vars) => invalidate(vars.id),
   });
 }
+
+export function usePushToCarrier() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id) => adminOrdersApi.pushToCarrier(id),
+    onSuccess: (_d, id) => invalidate(id),
+  });
+}
+
+export function useSchedulePickup() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ id, pickup_date, expected_package_count }) =>
+      adminOrdersApi.schedulePickup(id, { pickup_date, expected_package_count }),
+    onSuccess: (_d, vars) => invalidate(vars.id),
+  });
+}
+
+export function useSyncTracking() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id) => adminOrdersApi.syncTracking(id),
+    onSuccess: (_d, id) => invalidate(id),
+  });
+}
+
+export function useMockSimulate() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ id, awb, status, note }) =>
+      adminOrdersApi.mockSimulate(awb, status, note),
+    onSuccess: (_d, vars) => invalidate(vars.id),
+  });
+}

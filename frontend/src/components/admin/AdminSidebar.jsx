@@ -18,6 +18,7 @@ import {
   History,
   Settings as SettingsIcon,
   ClipboardList,
+  Undo2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils.js';
 import { useAuthStore } from '@/features/auth/store.js';
@@ -29,6 +30,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle.jsx';
 const NAV = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true, permission: null },
   { to: '/admin/orders', label: 'Orders', icon: ClipboardList, end: false, permission: 'orders.view_all' },
+  { to: '/admin/returns', label: 'Returns', icon: Undo2, end: false, permission: 'returns.view_all' },
   { to: '/admin/products', label: 'Products', icon: Package, end: false, permission: 'products.view' },
   { to: '/admin/categories', label: 'Categories', icon: Tags, end: false, permission: 'categories.view' },
   { to: '/admin/hero', label: 'Hero slides', icon: GalleryHorizontal, end: false, permission: 'hero_slides.manage' },

@@ -33,6 +33,12 @@ class Product(Base, IDMixin, TimestampMixin):
     # strikethrough "compare at" / "was" price next to a Sale badge.
     compare_at_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     stock: Mapped[int] = mapped_column(default=0, nullable=False)
+    # Shipping weight in grams. Null falls back to a 200g default at rate-quote
+    # time so untagged SKUs still ship. Admin-editable from the product form.
+    weight_grams: Mapped[int | None] = mapped_column(Integer)
+    # Any cart containing a cod_blocked product disables the COD option at
+    # checkout. Used for high-value or fragile SKUs where RTO is unacceptable.
+    cod_blocked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     # Denormalized primary image — kept in sync with the primary ProductImage
     # so listing/card queries stay cheap.
     image_url: Mapped[str | None] = mapped_column(String(512))

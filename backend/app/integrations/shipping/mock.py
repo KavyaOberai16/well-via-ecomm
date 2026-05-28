@@ -30,6 +30,7 @@ from app.integrations.shipping.base import (
     PickupResult,
     RateQuote,
     RateQuoteRequest,
+    ReverseShipmentRequest,
     ServiceabilityResult,
     ShipmentRequest,
     ShipmentResult,
@@ -128,6 +129,33 @@ class MockShippingProvider:
             provider=self.name,
             label_url=None,
             raw={"echo": {"order_id": req.order_id, "to": req.consignee.pincode}},
+        )
+
+    def create_reverse_shipment(self, req: ReverseShipmentRequest) -> ShipmentResult:
+        """Mirror of create_shipment but with `REV` in the AWB prefix so it's
+        grep-able in logs as a reverse shipment."""
+        awb = f"REVMOCK{req.return_id}-{secrets.token_hex(3).upper()}"
+        now = datetime.now(timezone.utc).isoformat()
+        try:
+            self._redis.setex(
+                f"{_REDIS_KEY_PREFIX}:{awb}",
+                _TRACKING_TTL_SECONDS,
+                json.dumps({
+                    "status": TrackingStatus.CREATED.value,
+                    "occurred_at": now,
+                    "events": [
+                        {"status": TrackingStatus.CREATED.value, "occurred_at": now,
+                         "location": req.customer.city, "note": "Reverse pickup created (mock)"}
+                    ],
+                }),
+            )
+        except redis.RedisError as exc:
+            logger.warning("mock reverse shipping redis seed failed: %s", exc)
+        return ShipmentResult(
+            awb_number=awb,
+            provider=self.name,
+            label_url=None,
+            raw={"reverse": True, "return_id": req.return_id, "from": req.customer.pincode},
         )
 
     # ---- pickup ----

@@ -36,6 +36,15 @@ export function useRemoveFromCart() {
   });
 }
 
+export function useUpdateCartQuantity() {
+  const invalidate = useInvalidateCart();
+  return useMutation({
+    mutationFn: ({ productId, quantity }) =>
+      cartApi.setQuantity(productId, quantity),
+    onSuccess: invalidate,
+  });
+}
+
 export function useApplyCoupon() {
   const qc = useQueryClient();
   return useMutation({

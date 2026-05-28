@@ -13,6 +13,12 @@ from app.models.order import Order, OrderItem, OrderStatus
 from app.models.product import Category, Product, ProductImage
 from app.models.rbac import Permission, Role, role_permissions, user_roles
 from app.models.referral import Referral, ReferralStatus
+from app.models.return_request import (
+    ReturnItem,
+    ReturnReason,
+    ReturnRequest,
+    ReturnStatus,
+)
 from app.models.review import Review
 from app.models.system_setting import SystemSetting
 from app.models.tax import Tax, product_taxes
@@ -39,6 +45,10 @@ __all__ = [
     "RedemptionTier",
     "Referral",
     "ReferralStatus",
+    "ReturnItem",
+    "ReturnReason",
+    "ReturnRequest",
+    "ReturnStatus",
     "Review",
     "Role",
     "SystemSetting",

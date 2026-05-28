@@ -30,6 +30,12 @@ class ProductBase(BaseModel):
     # no "discount" to show and the data is misleading.
     compare_at_price: Decimal | None = Field(default=None, ge=0, decimal_places=2)
     stock: int = Field(ge=0, default=0)
+    # Optional shipping weight in grams. Drives the rate calculator; null
+    # falls back to a 200g default at quote time.
+    weight_grams: int | None = Field(default=None, ge=0, le=200_000)
+    # When true, any cart containing this product disables COD at checkout
+    # (high-value or fragile items where RTO would be unacceptable).
+    cod_blocked: bool = False
     image_url: str | None = None
     category_id: int | None = None
 
@@ -50,6 +56,8 @@ class ProductUpdate(BaseModel):
     price: Decimal | None = None
     compare_at_price: Decimal | None = Field(default=None, ge=0, decimal_places=2)
     stock: int | None = None
+    weight_grams: int | None = Field(default=None, ge=0, le=200_000)
+    cod_blocked: bool | None = None
     image_url: str | None = None
     category_id: int | None = None
 

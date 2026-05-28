@@ -3,7 +3,14 @@ import { apiClient } from '@/services/apiClient.js';
 export const paymentsApi = {
   // Create order + initiate payment in one round-trip. Server returns the
   // redirect URL we then send the browser to.
-  checkout: ({ items, shipping_address, currency, coupon_code }) =>
+  checkout: ({
+    items,
+    shipping_address,
+    shipping_pincode,
+    payment_method,
+    currency,
+    coupon_code,
+  }) =>
     apiClient
       .post('/checkout', {
         items,
@@ -11,6 +18,8 @@ export const paymentsApi = {
         currency,
         // Only include when set — the backend's pydantic schema treats null
         // and absent the same, but cleaner request payloads ease debugging.
+        ...(shipping_pincode ? { shipping_pincode } : {}),
+        ...(payment_method ? { payment_method } : {}),
         ...(coupon_code ? { coupon_code } : {}),
       })
       .then((r) => r.data),

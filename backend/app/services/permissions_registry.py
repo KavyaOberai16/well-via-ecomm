@@ -29,6 +29,9 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
     PermissionDef("orders.view_all", "View all orders (not just own)", "Orders"),
     PermissionDef("orders.update_status", "Update order status", "Orders"),
     PermissionDef("orders.refund", "Issue refunds", "Orders"),
+    # Returns
+    PermissionDef("returns.view_all", "View all customer returns", "Returns"),
+    PermissionDef("returns.manage", "Approve/reject returns + reverse pickups", "Returns"),
     # Users / RBAC
     PermissionDef("users.view", "View users", "Users"),
     PermissionDef("users.update", "Update users (activate/deactivate)", "Users"),

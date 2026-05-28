@@ -117,6 +117,23 @@ class ShipmentRequest:
 
 
 @dataclass
+class ReverseShipmentRequest:
+    """Reverse pickup — picking the package up from the customer and
+    bringing it back to our warehouse. `consignee` is OUR warehouse;
+    `pickup` is the customer's address. Distinct dataclass (rather than
+    reusing ShipmentRequest with a flag) so each field clearly names what
+    it represents."""
+
+    return_id: int
+    return_reference: str             # printed on the reverse label
+    customer: ShipmentAddress         # where the carrier picks up from
+    warehouse: ShipmentAddress        # where the parcel comes back to
+    items: list[CartLine]
+    declared_value: Decimal           # what we're refunding — keeps insurance honest
+    original_awb: str | None = None   # forward AWB for cross-reference
+
+
+@dataclass
 class ShipmentResult:
     awb_number: str
     provider: str
@@ -176,6 +193,7 @@ class ShippingProvider(Protocol):
     def serviceability(self, pincode: str) -> ServiceabilityResult: ...
     def rate_quote(self, req: RateQuoteRequest) -> RateQuote: ...
     def create_shipment(self, req: ShipmentRequest) -> ShipmentResult: ...
+    def create_reverse_shipment(self, req: ReverseShipmentRequest) -> ShipmentResult: ...
     def schedule_pickup(self, req: PickupRequest) -> PickupResult: ...
     def label_pdf(self, awb_number: str) -> bytes: ...
     def fetch_tracking(self, awb_number: str) -> TrackingUpdate: ...

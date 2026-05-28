@@ -5,16 +5,20 @@ from app.api.v1.endpoints import (
     auth,
     cart,
     categories,
+    cod,
     coupons,
     dashboard,
     hero_slides,
     loyalty,
     orders,
+    payment_instruments,
     payments,
     products,
+    returns,
     reviews,
     roles,
     settings,
+    shipping,
     taxes,
     users,
     wishlist,
@@ -29,6 +33,7 @@ api_router.include_router(cart.router, prefix="/cart", tags=["cart"])
 api_router.include_router(orders.router, prefix="/orders", tags=["orders"])
 api_router.include_router(payments.checkout_router, prefix="/checkout", tags=["checkout"])
 api_router.include_router(payments.payments_router, prefix="/payments", tags=["payments"])
+api_router.include_router(payment_instruments.router, prefix="/payments", tags=["payments"])
 api_router.include_router(roles.router, prefix="/roles", tags=["roles"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(taxes.router, prefix="/taxes", tags=["taxes"])
@@ -41,4 +46,10 @@ api_router.include_router(reviews.admin_router, prefix="/reviews", tags=["review
 api_router.include_router(loyalty.router, prefix="/loyalty", tags=["loyalty"])
 api_router.include_router(audit.router, prefix="/audit-events", tags=["audit"])
 api_router.include_router(settings.router, prefix="/settings", tags=["settings"])
+api_router.include_router(shipping.router, prefix="/shipping", tags=["shipping"])
+api_router.include_router(cod.router, prefix="/cod", tags=["cod"])
+# Admin router first so /returns/admin/... matches before the customer
+# router's /returns/{return_id} dynamic segment.
+api_router.include_router(returns.admin_router, prefix="/returns/admin", tags=["returns"])
+api_router.include_router(returns.customer_router, prefix="/returns", tags=["returns"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])

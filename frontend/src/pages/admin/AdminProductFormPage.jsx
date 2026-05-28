@@ -22,6 +22,8 @@ const EMPTY = {
   price: '',
   compare_at_price: '',
   stock: '',
+  weight_grams: '',
+  cod_blocked: false,
   category_id: '',
 };
 
@@ -57,6 +59,9 @@ export default function AdminProductFormPage() {
         compare_at_price:
           product.compare_at_price != null ? String(product.compare_at_price) : '',
         stock: String(product.stock ?? ''),
+        weight_grams:
+          product.weight_grams != null ? String(product.weight_grams) : '',
+        cod_blocked: !!product.cod_blocked,
         category_id: product.category_id != null ? String(product.category_id) : '',
       });
       setSelectedTaxIds((product.taxes || []).map((t) => t.id));
@@ -100,6 +105,12 @@ export default function AdminProductFormPage() {
     if (form.stock !== '' && (Number.isNaN(Number(form.stock)) || Number(form.stock) < 0)) {
       next.stock = 'Stock cannot be negative.';
     }
+    if (form.weight_grams !== '') {
+      const w = Number(form.weight_grams);
+      if (Number.isNaN(w) || w < 0 || w > 200_000) {
+        next.weight_grams = 'Enter a weight between 0 and 200000 grams.';
+      }
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -112,6 +123,9 @@ export default function AdminProductFormPage() {
       compare_at_price:
         form.compare_at_price === '' ? null : Number(form.compare_at_price),
       stock: form.stock === '' ? 0 : Number(form.stock),
+      weight_grams:
+        form.weight_grams === '' ? null : Number(form.weight_grams),
+      cod_blocked: !!form.cod_blocked,
       category_id: form.category_id === '' ? null : Number(form.category_id),
     };
     return isEdit ? base : { sku: form.sku.trim(), ...base };
@@ -251,7 +265,37 @@ export default function AdminProductFormPage() {
               error={errors.stock}
               placeholder="24"
             />
+            <Input
+              label="Weight (grams)"
+              type="number"
+              step="1"
+              min="0"
+              value={form.weight_grams}
+              onChange={set('weight_grams')}
+              error={errors.weight_grams}
+              helper="Optional. Drives shipping cost — leave blank to use the 200g fallback."
+              placeholder="450"
+            />
           </div>
+          <label className="mt-4 flex items-start gap-2 rounded-sm border border-line-subtle bg-bg-sunken px-3 py-3">
+            <input
+              type="checkbox"
+              checked={form.cod_blocked}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, cod_blocked: e.target.checked }))
+              }
+              className="mt-0.5 size-4 rounded-sm border border-line-subtle bg-bg-elevated text-accent focus-visible:focus-ring"
+            />
+            <span className="flex-1 text-sm">
+              <span className="block font-medium text-ink-primary">
+                Block Cash on Delivery
+              </span>
+              <span className="block text-xs text-ink-tertiary">
+                When checked, any cart containing this product disables COD at
+                checkout. Use for fragile or high-value items.
+              </span>
+            </span>
+          </label>
           <Select
             label="Category"
             value={form.category_id}

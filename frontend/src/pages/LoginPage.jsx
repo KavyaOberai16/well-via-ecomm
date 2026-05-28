@@ -2,7 +2,21 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, Sparkles, Gift, ShieldCheck, ArrowLeft } from 'lucide-react';
+import {
+  Mail,
+  Lock,
+  User,
+  Sparkles,
+  Gift,
+  ShieldCheck,
+  ArrowLeft,
+  Star,
+  Shield,
+  Truck,
+  Clock,
+  Package,
+  BadgeCheck,
+} from 'lucide-react';
 import { Input } from '@/components/ui/Input.jsx';
 import { Button, buttonVariants } from '@/components/ui/Button.jsx';
 import { authApi } from '@/features/auth/api.js';
@@ -14,6 +28,46 @@ import {
 import { cn } from '@/lib/utils.js';
 import { env } from '@/config/env.js';
 import { duration, ease } from '@/lib/motion.js';
+import { usePublicSettings } from '@/features/settings/public.js';
+
+// Allowlisted icon keys for trust badges. Admin picks one of these in
+// Settings → Login; everything else falls back to a neutral badge.
+const TRUST_ICONS = {
+  star: Star,
+  shield: Shield,
+  truck: Truck,
+  clock: Clock,
+  package: Package,
+  badge: BadgeCheck,
+};
+
+function TrustBadges() {
+  const { data: cfg } = usePublicSettings();
+  if (!cfg) return null;
+  const badges = [1, 2, 3, 4]
+    .map((n) => ({
+      label: (cfg[`login.trust_badge_${n}_label`] || '').trim(),
+      iconKey: (cfg[`login.trust_badge_${n}_icon`] || 'badge').trim(),
+    }))
+    .filter((b) => b.label);
+  if (badges.length === 0) return null;
+  return (
+    <div className="mt-6 grid grid-cols-2 gap-2">
+      {badges.map((b, i) => {
+        const Icon = TRUST_ICONS[b.iconKey] || BadgeCheck;
+        return (
+          <div
+            key={i}
+            className="flex items-center gap-2 rounded-sm border border-line-subtle bg-bg-sunken px-2.5 py-1.5 text-[11px] text-ink-secondary"
+          >
+            <Icon className="size-3.5 shrink-0 text-accent" aria-hidden="true" />
+            <span className="truncate">{b.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function GoogleIcon() {
   return (
@@ -306,6 +360,8 @@ export default function LoginPage() {
             </button>
           </p>
           )}
+
+          {!pendingTotp && <TrustBadges />}
         </div>
 
         <p className="mt-6 text-center text-xs text-ink-tertiary">

@@ -3,7 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
-from app.schemas.cart import CartItemIn, CartRead, CouponApplyRequest
+from app.schemas.cart import (
+    CartItemIn,
+    CartItemQuantityUpdate,
+    CartRead,
+    CouponApplyRequest,
+)
 from app.services.cart_service import CartService
 
 router = APIRouter()
@@ -21,6 +26,19 @@ def add_item(
     db: Session = Depends(get_db),
 ):
     CartService(db).add_item(user.id, item)
+
+
+@router.put("/items/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+def set_item_quantity(
+    product_id: int,
+    payload: CartItemQuantityUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Set the absolute quantity of a cart line. Body `{quantity: 0}`
+    removes the line — saves the UI from switching between PUT/DELETE
+    on the quantity stepper."""
+    CartService(db).set_quantity(user.id, product_id, payload.quantity)
 
 
 @router.delete("/items/{product_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -53,6 +53,21 @@ class CartService:
     def remove_item(self, user_id: int, product_id: int) -> None:
         self.redis.hdel(_items_key(user_id), str(product_id))
 
+    def set_quantity(self, user_id: int, product_id: int, quantity: int) -> None:
+        """Absolute set of a cart line's quantity. Quantity 0 removes the
+        line — saves the UI from having to switch between PUT/DELETE on a
+        stepper. Validates the product exists so a stale UI can't push
+        ghost ids into the cart hash."""
+        if quantity < 0:
+            raise ValidationError("Quantity cannot be negative.")
+        if quantity == 0:
+            self.redis.hdel(_items_key(user_id), str(product_id))
+            return
+        product = self.products.get(product_id)
+        if not product:
+            raise NotFoundError("Product not found")
+        self.redis.hset(_items_key(user_id), str(product_id), quantity)
+
     def clear(self, user_id: int) -> None:
         self.redis.delete(_items_key(user_id))
         self.redis.delete(_coupon_key(user_id))
@@ -120,6 +135,7 @@ class CartService:
                     name=product.name,
                     quantity=qty,
                     unit_price=product.price,
+                    compare_at_price=product.compare_at_price,
                     line_subtotal=line_subtotal,
                     line_tax=line_tax,
                     line_total=quantize_money(line_subtotal + line_tax),

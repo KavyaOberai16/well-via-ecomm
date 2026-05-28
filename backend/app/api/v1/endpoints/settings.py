@@ -21,6 +21,30 @@ router = APIRouter()
 
 _SECRET_KEYS_FOR_AUDIT_LOG = {"smtp.password", "twilio.auth_token"}
 
+# Settings keys safe to expose to anonymous customers. Anything not in this
+# allowlist is admin-only — the public endpoint is a curated, hard-coded
+# view onto the system_settings table.
+_PUBLIC_KEYS: frozenset[str] = frozenset({
+    # Free-shipping threshold drives the customer-facing nudge banner.
+    "shipping.free_threshold",
+    # Trust badges on the login page.
+    "login.trust_badge_1_label", "login.trust_badge_1_icon",
+    "login.trust_badge_2_label", "login.trust_badge_2_icon",
+    "login.trust_badge_3_label", "login.trust_badge_3_icon",
+    "login.trust_badge_4_label", "login.trust_badge_4_icon",
+    # Whether the COD checkout flow needs to gate on an OTP — drives
+    # the conditional OTP modal on CheckoutPage.
+    "cod.require_otp",
+})
+
+
+@router.get("/public")
+def public_settings(db: Session = Depends(get_db)):
+    """Curated, anonymous view of `system_settings`. Returns a flat dict of
+    `{key: value}` for the allowlisted keys only — never any secrets."""
+    svc = SettingsService(db)
+    return {key: svc.get_raw(key) for key in _PUBLIC_KEYS}
+
 
 @router.get(
     "",

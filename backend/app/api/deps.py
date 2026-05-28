@@ -37,6 +37,26 @@ def get_current_user(
     return user
 
 
+def optional_current_user(
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """Like `get_current_user` but returns None when no/invalid token is
+    present instead of raising. Used by endpoints that personalize for
+    logged-in users but stay usable anonymously (e.g. /cod/check)."""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    try:
+        token = authorization.split(" ", 1)[1]
+        payload = decode_token(token)
+        if payload.get("type") != "access":
+            return None
+        user = UserRepository(db).get(int(payload["sub"]))
+        return user if user and user.is_active else None
+    except Exception:  # noqa: BLE001 — anonymous fallback for any decode error
+        return None
+
+
 def require_admin(user: User = Depends(get_current_user)) -> User:
     if not user.is_admin:
         raise ForbiddenError("Admin privileges required")

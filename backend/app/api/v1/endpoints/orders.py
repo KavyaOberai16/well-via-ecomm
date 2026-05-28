@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db, require_permission
@@ -20,6 +21,7 @@ from app.schemas.order import (
     OrderItemRead,
     OrderRead,
     RefundOrCancelRequest,
+    SchedulePickupRequest,
     ShipRequest,
 )
 from app.services.audit_service import AuditService
@@ -47,15 +49,30 @@ def _detail(order: Order) -> AdminOrderRead:
         subtotal=order.subtotal,
         tax_amount=order.tax_amount,
         discount_amount=order.discount_amount,
+        shipping_amount=order.shipping_amount,
         total_amount=order.total_amount,
         coupon_code=order.coupon_code,
         currency=order.currency,
         shipping_address=order.shipping_address,
+        shipping_pincode=order.shipping_pincode,
+        payment_method=order.payment_method,
+        payment_instrument=order.payment_instrument,
+        payment_discount_amount=order.payment_discount_amount,
+        cod_surcharge_amount=order.cod_surcharge_amount,
+        cod_balance=order.cod_balance,
         payment_intent_id=order.payment_intent_id,
         items=[OrderItemRead.model_validate(i) for i in order.items],
         customer=AdminCustomerBrief.model_validate(order.user),
         tracking_number=order.tracking_number,
         carrier=order.carrier,
+        shipping_provider=order.shipping_provider,
+        shipping_awb=order.shipping_awb,
+        shipping_label_url=order.shipping_label_url,
+        shipment_created_at=order.shipment_created_at,
+        pickup_id=order.pickup_id,
+        pickup_scheduled_for=order.pickup_scheduled_for,
+        tracking_events=order.tracking_events,
+        last_tracking_at=order.last_tracking_at,
         paid_at=order.paid_at,
         shipped_at=order.shipped_at,
         delivered_at=order.delivered_at,
@@ -235,6 +252,128 @@ def admin_refund_order(
     )
     db.commit()
     return _detail(order)
+
+
+@router.post("/admin/{order_id}/push-to-carrier", response_model=AdminOrderRead)
+def admin_push_to_carrier(
+    order_id: int,
+    request: Request,
+    actor: User = Depends(require_permission("orders.update_status")),
+    db: Session = Depends(get_db),
+):
+    """Push a PAID order to the active shipping provider and persist the AWB.
+
+    The actual transition to SHIPPED still happens via `mark_shipped` (or via
+    the tracking webhook in Phase 6) — this just creates the carrier-side
+    shipment and records the AWB. We keep the two actions separate so admins
+    can review the AWB / print the label before promising the customer.
+    """
+    from app.services.shipping_service import ShippingService
+
+    svc = ShippingService(db)
+    order = svc.create_shipment_for_order(order_id)
+    _audit_order(
+        db,
+        actor,
+        request,
+        "order.shipment_create",
+        order,
+        summary=(
+            f"Pushed order #{order.id} to {order.shipping_provider} "
+            f"(AWB {order.shipping_awb})"
+        ),
+        extra={
+            "provider": order.shipping_provider,
+            "awb": order.shipping_awb,
+        },
+    )
+    db.commit()
+    return _detail(order)
+
+
+@router.post("/admin/{order_id}/schedule-pickup", response_model=AdminOrderRead)
+def admin_schedule_pickup(
+    order_id: int,
+    payload: SchedulePickupRequest,
+    request: Request,
+    actor: User = Depends(require_permission("orders.update_status")),
+    db: Session = Depends(get_db),
+):
+    """Schedule the carrier pickup for an order that already has an AWB."""
+    from app.services.shipping_service import ShippingService
+
+    order = ShippingService(db).schedule_pickup_for_order(
+        order_id,
+        pickup_date=payload.pickup_date,
+        expected_package_count=payload.expected_package_count,
+    )
+    _audit_order(
+        db,
+        actor,
+        request,
+        "order.pickup_schedule",
+        order,
+        summary=(
+            f"Scheduled pickup {order.pickup_id} for order #{order.id} "
+            f"on {order.pickup_scheduled_for:%Y-%m-%d}"
+        ),
+        extra={
+            "pickup_id": order.pickup_id,
+            "pickup_scheduled_for": order.pickup_scheduled_for.isoformat()
+            if order.pickup_scheduled_for
+            else None,
+        },
+    )
+    db.commit()
+    return _detail(order)
+
+
+@router.post("/admin/{order_id}/sync-tracking", response_model=AdminOrderRead)
+def admin_sync_tracking(
+    order_id: int,
+    request: Request,
+    actor: User = Depends(require_permission("orders.update_status")),
+    db: Session = Depends(get_db),
+):
+    """Pull the carrier's current tracking state for this order and apply
+    any events we don't already have. Manual fallback when the webhook
+    didn't fire (or hasn't been configured)."""
+    from app.services.shipping_service import ShippingService
+
+    order = ShippingService(db).sync_tracking_for_order(order_id)
+    _audit_order(
+        db,
+        actor,
+        request,
+        "order.tracking_sync",
+        order,
+        summary=f"Pulled tracking for order #{order.id} ({order.shipping_awb})",
+    )
+    db.commit()
+    return _detail(order)
+
+
+@router.get("/admin/{order_id}/shipping-label")
+def admin_shipping_label(
+    order_id: int,
+    _actor: User = Depends(require_permission("orders.view_all")),
+    db: Session = Depends(get_db),
+):
+    """Streams the carrier-issued shipping label as a PDF.
+
+    Returns the raw PDF body so the admin's browser can render it inline or
+    download it via `Content-Disposition: attachment`. Auth flows through
+    the same permission as the order detail view — anyone who can see the
+    order can print its label.
+    """
+    from app.services.shipping_service import ShippingService
+
+    pdf, filename = ShippingService(db).label_pdf_for_order(order_id)
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
 
 
 @router.patch("/admin/{order_id}/notes", response_model=AdminOrderRead)

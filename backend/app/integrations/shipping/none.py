@@ -18,6 +18,7 @@ from app.integrations.shipping.base import (
     ProviderNotConfiguredError,
     RateQuote,
     RateQuoteRequest,
+    ReverseShipmentRequest,
     ServiceabilityResult,
     ShipmentRequest,
     ShipmentResult,
@@ -45,6 +46,9 @@ class NoneShippingProvider:
         raise self._disabled()
 
     def create_shipment(self, req: ShipmentRequest) -> ShipmentResult:
+        raise self._disabled()
+
+    def create_reverse_shipment(self, req: ReverseShipmentRequest) -> ShipmentResult:
         raise self._disabled()
 
     def schedule_pickup(self, req: PickupRequest) -> PickupResult:

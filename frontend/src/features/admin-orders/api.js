@@ -26,4 +26,31 @@ export const adminOrdersApi = {
     apiClient
       .patch(`/orders/admin/${id}/notes`, { internal_notes })
       .then((r) => r.data),
+  pushToCarrier: (id) =>
+    apiClient
+      .post(`/orders/admin/${id}/push-to-carrier`, {})
+      .then((r) => r.data),
+  schedulePickup: (id, { pickup_date, expected_package_count = 1 }) =>
+    apiClient
+      .post(`/orders/admin/${id}/schedule-pickup`, {
+        pickup_date,
+        expected_package_count,
+      })
+      .then((r) => r.data),
+  // Returns the raw PDF blob — caller turns it into a download / new tab.
+  fetchLabel: (id) =>
+    apiClient
+      .get(`/orders/admin/${id}/shipping-label`, { responseType: 'blob' })
+      .then((r) => r.data),
+  syncTracking: (id) =>
+    apiClient
+      .post(`/orders/admin/${id}/sync-tracking`, {})
+      .then((r) => r.data),
+  // Dev-only: mock simulator. Only useful when shipping.provider=mock.
+  mockSimulate: (awb, status, note = null) =>
+    apiClient
+      .post('/shipping/mock/simulate', null, {
+        params: { awb, status, ...(note ? { note } : {}) },
+      })
+      .then((r) => r.data),
 };

@@ -34,10 +34,25 @@ class OrderRead(BaseModel):
     subtotal: Decimal = Decimal("0")
     tax_amount: Decimal = Decimal("0")
     discount_amount: Decimal = Decimal("0")
+    shipping_amount: Decimal = Decimal("0")
     total_amount: Decimal
     coupon_code: str | None = None
     currency: str
     shipping_address: str | None
+    shipping_pincode: str | None = None
+    # Payment-method snapshot. 'cod_balance' is the amount the carrier will
+    # collect on delivery (zero for prepaid orders).
+    payment_method: str = "prepaid"
+    payment_instrument: str | None = None
+    payment_discount_amount: Decimal = Decimal("0")
+    cod_surcharge_amount: Decimal = Decimal("0")
+    cod_balance: Decimal = Decimal("0")
+    # Customer-visible shipping data: carrier + AWB are useful even without
+    # event detail (the customer can paste the AWB into the carrier's site).
+    shipping_provider: str | None = None
+    shipping_awb: str | None = None
+    tracking_events: list[dict] | None = None
+    last_tracking_at: datetime | None = None
     items: list[OrderItemRead]
     created_at: datetime
 
@@ -86,15 +101,32 @@ class AdminOrderRead(BaseModel):
     subtotal: Decimal
     tax_amount: Decimal
     discount_amount: Decimal
+    shipping_amount: Decimal = Decimal("0")
     total_amount: Decimal
     coupon_code: str | None
     currency: str
     shipping_address: str | None
+    shipping_pincode: str | None = None
+    payment_method: str = "prepaid"
+    payment_instrument: str | None = None
+    payment_discount_amount: Decimal = Decimal("0")
+    cod_surcharge_amount: Decimal = Decimal("0")
+    cod_balance: Decimal = Decimal("0")
     payment_intent_id: str | None
     items: list[OrderItemRead]
     customer: AdminCustomerBrief
     tracking_number: str | None
     carrier: str | None
+    # Carrier-side shipment identity. Populated by ShippingService once
+    # the order has been pushed to the carrier (Phase 4+).
+    shipping_provider: str | None = None
+    shipping_awb: str | None = None
+    shipping_label_url: str | None = None
+    shipment_created_at: datetime | None = None
+    pickup_id: str | None = None
+    pickup_scheduled_for: datetime | None = None
+    tracking_events: list[dict] | None = None
+    last_tracking_at: datetime | None = None
     paid_at: datetime | None
     shipped_at: datetime | None
     delivered_at: datetime | None
@@ -109,6 +141,21 @@ class AdminOrderRead(BaseModel):
 class ShipRequest(BaseModel):
     tracking_number: str | None = Field(default=None, max_length=120)
     carrier: str | None = Field(default=None, max_length=60)
+
+
+class SchedulePickupRequest(BaseModel):
+    """Body of POST /orders/admin/{id}/schedule-pickup.
+
+    `pickup_date` is an ISO date (YYYY-MM-DD). Carriers in India typically
+    won't accept past dates or pickups more than ~7 days out — the service
+    layer enforces "tomorrow or later, within 7 days" so admins get a clear
+    error instead of a vague carrier rejection.
+    """
+
+    pickup_date: datetime = Field(
+        description="When the carrier should collect the package (any time on this date)."
+    )
+    expected_package_count: int = Field(default=1, ge=1, le=999)
 
 
 class RefundOrCancelRequest(BaseModel):
