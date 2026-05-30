@@ -235,7 +235,7 @@ export default function AdminProductFormPage() {
           />
           <div className="grid gap-x-4 sm:grid-cols-3">
             <Input
-              label="Price (USD)"
+              label="Price (INR)"
               type="number"
               step="0.01"
               min="0"

@@ -41,6 +41,20 @@ export function ProductCard({ product, onQuickAdd }) {
     Number.isFinite(compareNum) &&
     compareNum > priceNum;
 
+  // Discount percentage — only shown when there's a real markdown
+  const discountPct =
+    onSale && compareNum > 0
+      ? Math.round(((compareNum - priceNum) / compareNum) * 100)
+      : 0;
+
+  // "NEW" signal: product has a created_at within the last 30 days
+  const isNew = (() => {
+    if (!product.created_at) return false;
+    const created = new Date(product.created_at);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    return created >= thirtyDaysAgo;
+  })();
+
   function handleMove(e) {
     if (reduce || !ref.current) return;
     const r = ref.current.getBoundingClientRect();
@@ -72,13 +86,13 @@ export function ProductCard({ product, onQuickAdd }) {
         <Link
           to={`/products/${product.id}`}
           className={cn(
-            'block overflow-hidden rounded-lg border border-line-subtle bg-bg-elevated shadow-md',
-            'transition-shadow duration-200 hover:shadow-lg',
+            'block overflow-hidden rounded-md border border-line-subtle bg-bg-elevated shadow-sm',
+            'transition-shadow duration-200 hover:shadow-md',
             'focus-visible:focus-ring',
           )}
         >
           {/* Media — fixed 4:5 aspect reserves space */}
-          <div className="relative aspect-[4/5] overflow-hidden">
+          <div className="relative aspect-[4/5] overflow-hidden bg-bg-sunken">
             <motion.div
               animate={{ scale: hovered && !reduce ? 1.05 : 1 }}
               transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
@@ -90,11 +104,15 @@ export function ProductCard({ product, onQuickAdd }) {
               />
             </motion.div>
 
+            {/* Top-left badge chips: discount % > Sale > NEW > stock */}
             <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
-              {onSale && (
-                <Badge tone="danger" className="bg-danger text-white">
-                  Sale
-                </Badge>
+              {onSale && discountPct > 0 ? (
+                <Badge tone="danger">-{discountPct}%</Badge>
+              ) : onSale ? (
+                <Badge tone="danger">Sale</Badge>
+              ) : null}
+              {!onSale && isNew && (
+                <Badge tone="accent">NEW</Badge>
               )}
               <Badge tone={stock.tone}>{stock.text}</Badge>
             </div>
@@ -133,9 +151,11 @@ export function ProductCard({ product, onQuickAdd }) {
 
           {/* Info */}
           <div className="flex flex-col gap-1 p-4">
-            <p className="text-xs uppercase tracking-wide text-ink-tertiary">
-              {product.sku}
-            </p>
+            {product.sku && (
+              <p className="text-xs uppercase tracking-wide text-ink-tertiary">
+                {product.sku}
+              </p>
+            )}
             <h3 className="line-clamp-2 text-sm font-semibold text-ink-primary">
               {product.name}
             </h3>

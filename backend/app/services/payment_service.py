@@ -58,7 +58,7 @@ class PaymentService:
         self.products = ProductRepository(db)
         self.cart = CartService(db)
         self.coupons = CouponRepository(db)
-        self.provider = get_payment_provider()
+        self.provider = get_payment_provider(self.db)
 
     # ---- public ----
 

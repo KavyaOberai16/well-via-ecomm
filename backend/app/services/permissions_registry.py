@@ -64,11 +64,23 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
     PermissionDef("referrals.view", "View referral program activity", "Loyalty"),
     # Audit
     PermissionDef("audit.view", "View the admin action audit log", "Audit"),
+    # Payments
+    PermissionDef(
+        "payments.manage",
+        "Configure the payment gateway (PhonePe credentials)",
+        "Payments",
+    ),
     # Settings
     PermissionDef(
         "settings.manage",
         "Read & edit runtime system settings (SMTP, SMS, security)",
         "Settings",
+    ),
+    # Frontend / storefront
+    PermissionDef(
+        "frontend.manage",
+        "Manage storefront UI (footer, hero, etc.)",
+        "Frontend",
     ),
 )
 

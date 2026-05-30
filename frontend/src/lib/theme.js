@@ -2,7 +2,7 @@
 
 export const THEME_KEY = 'lumen-theme';
 
-/** Resolve the initial theme: stored choice, else the OS preference. */
+/** Resolve the initial theme: stored choice, else default to light. */
 export function resolveInitialTheme() {
   try {
     const stored = localStorage.getItem(THEME_KEY);
@@ -10,10 +10,8 @@ export function resolveInitialTheme() {
   } catch {
     /* localStorage unavailable */
   }
-  const prefersLight =
-    typeof matchMedia === 'function' &&
-    matchMedia('(prefers-color-scheme: light)').matches;
-  return prefersLight ? 'light' : 'dark';
+  // Storefront defaults to light out of the box; the toggle persists any change.
+  return 'light';
 }
 
 /** Apply a theme to <html> and persist it. */

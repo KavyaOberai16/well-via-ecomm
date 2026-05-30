@@ -39,7 +39,7 @@ class Order(Base, IDMixin, TimestampMixin):
     shipping_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     total_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     coupon_code: Mapped[str | None] = mapped_column(String(64))
-    currency: Mapped[str] = mapped_column(String(3), default="USD", nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), default="INR", nullable=False)
 
     # Payment method. 'prepaid' goes through the gateway; 'cod' bypasses it
     # and the carrier collects on delivery; 'split_cod' (Phase 9) collects a

@@ -1,6 +1,7 @@
 from app.models.audit import AuditEvent
 from app.models.base import Base
 from app.models.coupon import Coupon, CouponUsage, DiscountType
+from app.models.footer_config import FooterConfig
 from app.models.hero_slide import HeroSlide
 from app.models.loyalty import (
     EarnRule,
@@ -10,6 +11,7 @@ from app.models.loyalty import (
     VipTier,
 )
 from app.models.order import Order, OrderItem, OrderStatus
+from app.models.payment_gateway import PaymentGatewayConfig
 from app.models.product import Category, Product, ProductImage
 from app.models.rbac import Permission, Role, role_permissions, user_roles
 from app.models.referral import Referral, ReferralStatus
@@ -33,10 +35,12 @@ __all__ = [
     "CouponUsage",
     "DiscountType",
     "EarnRule",
+    "FooterConfig",
     "HeroSlide",
     "Order",
     "OrderItem",
     "OrderStatus",
+    "PaymentGatewayConfig",
     "Permission",
     "PointsReason",
     "PointsTransaction",

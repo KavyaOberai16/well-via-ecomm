@@ -152,6 +152,10 @@ const FIELD_META = {
     placeholder: '100' },
   'cod.require_otp':              { label: 'Require SMS OTP for COD orders', type: 'bool' },
 
+  // Payment gateway config (provider + PhonePe credentials) now lives on its
+  // own dedicated screen — Admin → Payment Gateway — backed by the
+  // payment_gateway_config table, not these key/value settings.
+
   // Payment instruments (Phase 10). Each rail can be enabled/disabled
   // independently and can carry its own % discount — UPI typically gets
   // the discount because UPI MDR is ~0% in India.

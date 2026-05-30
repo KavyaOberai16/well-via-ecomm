@@ -39,6 +39,8 @@ const AdminReviewsPage = lazy(() => import('@/pages/admin/AdminReviewsPage.jsx')
 const AdminLoyaltyPage = lazy(() => import('@/pages/admin/AdminLoyaltyPage.jsx'));
 const AdminAuditPage = lazy(() => import('@/pages/admin/AdminAuditPage.jsx'));
 const AdminSettingsPage = lazy(() => import('@/pages/admin/AdminSettingsPage.jsx'));
+const AdminPaymentGatewayPage = lazy(() => import('@/pages/admin/AdminPaymentGatewayPage.jsx'));
+const AdminFooterPage = lazy(() => import('@/pages/admin/AdminFooterPage.jsx'));
 const AdminOrdersPage = lazy(() => import('@/pages/admin/AdminOrdersPage.jsx'));
 const AdminOrderDetailPage = lazy(() => import('@/pages/admin/AdminOrderDetailPage.jsx'));
 const AdminReturnsPage = lazy(() => import('@/pages/admin/AdminReturnsPage.jsx'));
@@ -168,6 +170,22 @@ export default function App() {
               element={
                 <RequirePermission permission="settings.manage">
                   <AdminSettingsPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/payment-gateway"
+              element={
+                <RequirePermission permission="payments.manage">
+                  <AdminPaymentGatewayPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/footer"
+              element={
+                <RequirePermission permission="frontend.manage">
+                  <AdminFooterPage />
                 </RequirePermission>
               }
             />

@@ -28,3 +28,27 @@ export function useDeleteCategory() {
     onSuccess: invalidate,
   });
 }
+
+export function useUpdateCategory() {
+  const invalidate = useCategoryInvalidation();
+  return useMutation({
+    mutationFn: ({ id, data }) => categoriesApi.update(id, data),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUploadCategoryImage() {
+  const invalidate = useCategoryInvalidation();
+  return useMutation({
+    mutationFn: ({ id, file }) => categoriesApi.uploadImage(id, file),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRemoveCategoryImage() {
+  const invalidate = useCategoryInvalidation();
+  return useMutation({
+    mutationFn: (id) => categoriesApi.removeImage(id),
+    onSuccess: invalidate,
+  });
+}

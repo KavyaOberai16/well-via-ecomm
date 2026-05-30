@@ -1,4 +1,5 @@
-import { Link, NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -19,6 +20,10 @@ import {
   Settings as SettingsIcon,
   ClipboardList,
   Undo2,
+  CreditCard,
+  LayoutPanelTop,
+  ChevronDown,
+  LayoutTemplate,
 } from 'lucide-react';
 import { cn } from '@/lib/utils.js';
 import { useAuthStore } from '@/features/auth/store.js';
@@ -33,7 +38,6 @@ const NAV = [
   { to: '/admin/returns', label: 'Returns', icon: Undo2, end: false, permission: 'returns.view_all' },
   { to: '/admin/products', label: 'Products', icon: Package, end: false, permission: 'products.view' },
   { to: '/admin/categories', label: 'Categories', icon: Tags, end: false, permission: 'categories.view' },
-  { to: '/admin/hero', label: 'Hero slides', icon: GalleryHorizontal, end: false, permission: 'hero_slides.manage' },
   { to: '/admin/coupons', label: 'Coupons', icon: TicketPercent, end: false, permission: 'coupons.view' },
   { to: '/admin/taxes', label: 'Taxes', icon: Percent, end: false, permission: 'taxes.view' },
   { to: '/admin/reviews', label: 'Reviews', icon: Star, end: false, permission: 'reviews.view' },
@@ -41,24 +45,143 @@ const NAV = [
   { to: '/admin/users', label: 'Users', icon: Users, end: false, permission: 'users.view' },
   { to: '/admin/roles', label: 'Roles', icon: ShieldCheck, end: false, permission: 'roles.view' },
   { to: '/admin/audit', label: 'Audit log', icon: History, end: false, permission: 'audit.view' },
+  { to: '/admin/payment-gateway', label: 'Payment Gateway', icon: CreditCard, end: false, permission: 'payments.manage' },
   { to: '/admin/settings', label: 'Settings', icon: SettingsIcon, end: false, permission: 'settings.manage' },
 ];
+
+// Collapsible group definitions. Children use the same permission model.
+const FRONTEND_GROUP = {
+  label: 'Frontend',
+  icon: LayoutPanelTop,
+  children: [
+    { to: '/admin/hero', label: 'Hero slides', icon: GalleryHorizontal, end: false, permission: 'hero_slides.manage' },
+    { to: '/admin/footer', label: 'Footer', icon: LayoutTemplate, end: false, permission: 'frontend.manage' },
+  ],
+};
 
 function useVisibleNav() {
   const user = useAuthStore((s) => s.user);
   const isAdmin = !!user?.is_admin;
   const perms = user?.permissions || [];
-  return NAV.filter((item) => {
+
+  function isVisible(item) {
     if (item.permission == null) return true;
     if (isAdmin) return true;
     return perms.includes(item.permission);
-  });
+  }
+
+  const flatItems = NAV.filter(isVisible);
+  const groupChildren = FRONTEND_GROUP.children.filter(isVisible);
+
+  return { flatItems, groupChildren };
+}
+
+function NavItem({ item, onNavigate }) {
+  return (
+    <NavLink
+      to={item.to}
+      end={item.end}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        cn(
+          'flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-colors focus-visible:focus-ring',
+          isActive
+            ? 'bg-accent/15 text-accent'
+            : 'text-ink-secondary hover:bg-fill hover:text-ink-primary',
+        )
+      }
+    >
+      <item.icon className="size-4" aria-hidden="true" />
+      {item.label}
+    </NavLink>
+  );
+}
+
+function FrontendGroup({ children, onNavigate }) {
+  const location = useLocation();
+
+  // Auto-expand when any child route is active.
+  const isAnyChildActive = children.some((c) => location.pathname.startsWith(c.to));
+  const [open, setOpen] = useState(isAnyChildActive);
+
+  if (children.length === 0) return null;
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          'flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-colors focus-visible:focus-ring',
+          isAnyChildActive
+            ? 'text-accent'
+            : 'text-ink-secondary hover:bg-fill hover:text-ink-primary',
+        )}
+        aria-expanded={open}
+      >
+        <LayoutPanelTop className="size-4 shrink-0" aria-hidden="true" />
+        <span className="flex-1 text-left">{FRONTEND_GROUP.label}</span>
+        <ChevronDown
+          className={cn(
+            'size-3.5 text-ink-tertiary transition-transform duration-200',
+            open && 'rotate-180',
+          )}
+          aria-hidden="true"
+        />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <div className="ml-3 mt-0.5 flex flex-col gap-0.5 border-l border-line-subtle pl-3">
+              {children.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 rounded-sm px-3 py-2 text-sm transition-colors focus-visible:focus-ring',
+                      isActive
+                        ? 'bg-accent/15 text-accent'
+                        : 'text-ink-secondary hover:bg-fill hover:text-ink-primary',
+                    )
+                  }
+                >
+                  <item.icon className="size-4" aria-hidden="true" />
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 function SidebarContent({ onNavigate }) {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
-  const items = useVisibleNav();
+  const { flatItems, groupChildren } = useVisibleNav();
+
+  // Split flat items: place Frontend group where the Hero item used to be
+  // (after Categories, before Coupons — index 4 in the original NAV order).
+  // We inject the group between Categories and Coupons.
+  const beforeGroup = flatItems.filter((item) =>
+    ['/admin', '/admin/orders', '/admin/returns', '/admin/products', '/admin/categories'].includes(item.to),
+  );
+  const afterGroup = flatItems.filter(
+    (item) =>
+      !['/admin', '/admin/orders', '/admin/returns', '/admin/products', '/admin/categories'].includes(item.to),
+  );
 
   return (
     <div className="flex h-full flex-col gap-1 p-4">
@@ -76,29 +199,21 @@ function SidebarContent({ onNavigate }) {
         </span>
       </Link>
 
-      <nav className="flex flex-col gap-1">
-        {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-colors focus-visible:focus-ring',
-                isActive
-                  ? 'bg-accent/15 text-accent'
-                  : 'text-ink-secondary hover:bg-fill hover:text-ink-primary',
-              )
-            }
-          >
-            <item.icon className="size-4" aria-hidden="true" />
-            {item.label}
-          </NavLink>
+      {/* IMPORTANT: min-h-0 flex-1 overflow-y-auto preserves sidebar scroll */}
+      <nav className="-mr-2 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-2">
+        {beforeGroup.map((item) => (
+          <NavItem key={item.to} item={item} onNavigate={onNavigate} />
+        ))}
+
+        {/* Collapsible Frontend group — sits where Hero slides used to be */}
+        <FrontendGroup children={groupChildren} onNavigate={onNavigate} />
+
+        {afterGroup.map((item) => (
+          <NavItem key={item.to} item={item} onNavigate={onNavigate} />
         ))}
       </nav>
 
-      <div className="mt-auto flex flex-col gap-1 border-t border-line-subtle pt-3">
+      <div className="mt-auto flex shrink-0 flex-col gap-1 border-t border-line-subtle pt-3">
         <Link
           to="/"
           onClick={onNavigate}

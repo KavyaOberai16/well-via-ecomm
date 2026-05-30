@@ -12,7 +12,6 @@ from fastapi import APIRouter, Depends, Header, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
-from app.core.config import settings
 from app.core.exceptions import ForbiddenError, ValidationError
 from app.models.user import User
 from app.schemas.order import OrderRead
@@ -22,6 +21,7 @@ from app.schemas.payment import (
     MockWebhookRequest,
     PaymentStatusResponse,
 )
+from app.services.payment_gateway_service import PaymentGatewayService
 from app.services.payment_service import PaymentService
 
 checkout_router = APIRouter()
@@ -105,8 +105,11 @@ def mock_webhook(
     payload: MockWebhookRequest,
     db: Session = Depends(get_db),
 ):
-    # Guard so this stays out of production paths.
-    if settings.PAYMENT_PROVIDER.lower() != "mock":
+    # Guard so this stays out of production paths. The active provider now
+    # lives in the DB (admin-configurable), so read it from there rather than
+    # the env var.
+    active_provider = (PaymentGatewayService(db).get().provider or "mock").lower()
+    if active_provider != "mock":
         raise ForbiddenError("Mock webhook disabled when a real provider is configured.")
     if payload.action not in {"approve", "decline"}:
         raise ValidationError("action must be 'approve' or 'decline'.")

@@ -1,143 +1,43 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Sparkles,
-  Facebook,
-  Twitter,
-  Youtube,
-  Instagram,
-  Store,
-  Megaphone,
-  Gift,
-  LifeBuoy,
-  Mail,
-  ArrowRight,
-  Truck,
-  RotateCcw,
-  ShieldCheck,
-  Headphones,
-  Check,
-} from 'lucide-react';
+import { Sparkles, Mail, ArrowRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils.js';
-
-const TRUST_FEATURES = [
-  { Icon: Truck, title: 'Free Shipping', sub: 'On orders over $50' },
-  { Icon: RotateCcw, title: 'Easy Returns', sub: '30-day return window' },
-  { Icon: ShieldCheck, title: 'Secure Payment', sub: '256-bit SSL encryption' },
-  { Icon: Headphones, title: '24/7 Support', sub: 'Real humans, anytime' },
-];
-
-const LINK_COLUMNS = [
-  {
-    title: 'About',
-    links: [
-      { to: '/contact', label: 'Contact Us' },
-      { to: '/about', label: 'About Us' },
-      { to: '/careers', label: 'Careers' },
-      { to: '/stories', label: 'Lumen Stories' },
-      { to: '/press', label: 'Press' },
-      { to: '/corporate', label: 'Corporate Information' },
-    ],
-  },
-  {
-    title: 'Group',
-    links: [
-      { to: '/brands/aura', label: 'Aura' },
-      { to: '/brands/voyage', label: 'Voyage' },
-      { to: '/brands/forge', label: 'Forge' },
-    ],
-  },
-  {
-    title: 'Help',
-    links: [
-      { to: '/help/payments', label: 'Payments' },
-      { to: '/help/shipping', label: 'Shipping' },
-      { to: '/help/returns', label: 'Cancellation & Returns' },
-      { to: '/help/faq', label: 'FAQ' },
-    ],
-  },
-  {
-    title: 'Consumer Policy',
-    links: [
-      { to: '/policy/returns', label: 'Cancellation & Returns' },
-      { to: '/terms', label: 'Terms of Use' },
-      { to: '/security', label: 'Security' },
-      { to: '/privacy', label: 'Privacy' },
-      { to: '/sitemap', label: 'Sitemap' },
-      { to: '/grievance', label: 'Grievance Redressal' },
-      { to: '/epr', label: 'EPR Compliance' },
-    ],
-  },
-];
-
-const SOCIAL_LINKS = [
-  { href: 'https://facebook.com/lumen', label: 'Facebook', Icon: Facebook },
-  { href: 'https://twitter.com/lumen', label: 'Twitter', Icon: Twitter },
-  { href: 'https://youtube.com/lumen', label: 'YouTube', Icon: Youtube },
-  { href: 'https://instagram.com/lumen', label: 'Instagram', Icon: Instagram },
-];
-
-const BOTTOM_LINKS = [
-  { to: '/sell', label: 'Become a Seller', Icon: Store },
-  { to: '/advertise', label: 'Advertise', Icon: Megaphone },
-  { to: '/gift-cards', label: 'Gift Cards', Icon: Gift },
-  { to: '/help', label: 'Help Center', Icon: LifeBuoy },
-];
-
-const PAYMENT_METHODS = [
-  'VISA',
-  'MC',
-  'AmEx',
-  'UPI',
-  'RuPay',
-  'Net Banking',
-  'COD',
-  'EMI',
-];
-
-const MAIL_ADDRESS = [
-  'Lumen Internet Pvt. Ltd.,',
-  'Buildings Alyssa, Begonia &',
-  'Clove Embassy Tech Village,',
-  'Outer Ring Road, Devarabeesanahalli Village,',
-  'Bengaluru, 560103,',
-  'Karnataka, India',
-];
-
-const REGISTERED_OFFICE = {
-  lines: MAIL_ADDRESS,
-  cin: 'U51109KA2026PTC066107',
-  phones: [
-    { display: '044-4561 4700', tel: '+914445614700' },
-    { display: '044-6741 5800', tel: '+914467415800' },
-  ],
-};
+import { useFooterConfig } from '@/features/footer/hooks.js';
+import { FOOTER_DEFAULTS, resolveIcon } from '@/features/footer/defaults.js';
 
 export default function Footer() {
+  const { data } = useFooterConfig();
+  // Shallow merge: server returns a complete document; FOOTER_DEFAULTS is the
+  // instant-render fallback while the query is in-flight or when offline.
+  const cfg = { ...FOOTER_DEFAULTS, ...data };
+
   const year = new Date().getFullYear();
+  const copyright = (cfg.copyright || '').replace('{year}', year);
 
   return (
     <footer className="mt-24 border-t border-line-subtle bg-bg-sunken">
-      <TrustStrip />
+      <TrustStrip features={cfg.trust_features} />
 
       <div className="border-t border-line-subtle">
         <div className="mx-auto grid max-w-content gap-8 px-6 py-10 lg:grid-cols-[1fr_auto] lg:items-center">
-          <BrandBlock />
-          <NewsletterForm />
+          <BrandBlock brand={cfg.brand} />
+          {cfg.newsletter?.enabled !== false && (
+            <NewsletterForm newsletter={cfg.newsletter} />
+          )}
         </div>
       </div>
 
       <div className="border-t border-line-subtle">
         <div className="mx-auto max-w-content px-6 py-12">
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 lg:grid-cols-6">
-            {LINK_COLUMNS.map((col) => (
+            {cfg.link_columns.map((col) => (
               <LinkColumn key={col.title} title={col.title} links={col.links} />
             ))}
 
             <div className="col-span-2 md:col-span-3 lg:col-span-1 lg:border-l lg:border-line-subtle lg:pl-6">
-              <SectionHeading>Mail Us</SectionHeading>
+              <SectionHeading>{cfg.mail_us?.heading || 'Mail Us'}</SectionHeading>
               <address className="not-italic text-sm leading-6 text-ink-secondary">
-                {MAIL_ADDRESS.map((line) => (
+                {(cfg.mail_us?.lines || []).map((line) => (
                   <span key={line} className="block">
                     {line}
                   </span>
@@ -146,48 +46,57 @@ export default function Footer() {
 
               <SectionHeading className="mt-6">Social</SectionHeading>
               <ul className="flex items-center gap-3">
-                {SOCIAL_LINKS.map(({ href, label, Icon }) => (
-                  <li key={label}>
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={label}
-                      className="grid size-9 place-items-center rounded-full border border-line-subtle text-ink-secondary transition-colors hover:border-line-strong hover:text-ink-primary focus-visible:focus-ring"
-                    >
-                      <Icon className="size-4" aria-hidden="true" />
-                    </a>
-                  </li>
-                ))}
+                {cfg.social_links.map(({ href, label, icon }) => {
+                  const Icon = resolveIcon(icon);
+                  return (
+                    <li key={label}>
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={label}
+                        className="grid size-9 place-items-center rounded-full border border-line-subtle text-ink-secondary transition-colors hover:border-line-strong hover:text-ink-primary focus-visible:focus-ring"
+                      >
+                        <Icon className="size-4" aria-hidden="true" />
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
             <div className="col-span-2 md:col-span-3 lg:col-span-1">
-              <SectionHeading>Registered Office Address</SectionHeading>
+              <SectionHeading>
+                {cfg.registered_office?.heading || 'Registered Office Address'}
+              </SectionHeading>
               <address className="not-italic text-sm leading-6 text-ink-secondary">
-                {REGISTERED_OFFICE.lines.map((line) => (
+                {(cfg.registered_office?.lines || []).map((line) => (
                   <span key={line} className="block">
                     {line}
                   </span>
                 ))}
-                <span className="mt-2 block">CIN: {REGISTERED_OFFICE.cin}</span>
+                {cfg.registered_office?.cin && (
+                  <span className="mt-2 block">CIN: {cfg.registered_office.cin}</span>
+                )}
               </address>
-              <p className="mt-1 text-sm text-ink-secondary">
-                Telephone:{' '}
-                {REGISTERED_OFFICE.phones.map((p, i) => (
-                  <span key={p.tel}>
-                    <a
-                      href={`tel:${p.tel}`}
-                      className="rounded-sm text-accent transition-colors hover:text-accent-hover focus-visible:focus-ring"
-                    >
-                      {p.display}
-                    </a>
-                    {i < REGISTERED_OFFICE.phones.length - 1 && (
-                      <span className="text-ink-tertiary"> / </span>
-                    )}
-                  </span>
-                ))}
-              </p>
+              {cfg.registered_office?.phones?.length > 0 && (
+                <p className="mt-1 text-sm text-ink-secondary">
+                  Telephone:{' '}
+                  {cfg.registered_office.phones.map((p, i) => (
+                    <span key={p.tel}>
+                      <a
+                        href={`tel:${p.tel}`}
+                        className="rounded-sm text-accent transition-colors hover:text-accent-hover focus-visible:focus-ring"
+                      >
+                        {p.display}
+                      </a>
+                      {i < cfg.registered_office.phones.length - 1 && (
+                        <span className="text-ink-tertiary"> / </span>
+                      )}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -196,25 +105,26 @@ export default function Footer() {
       <div className="border-t border-line-subtle">
         <div className="mx-auto flex max-w-content flex-col items-center gap-6 px-6 py-6 lg:flex-row lg:justify-between">
           <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-            {BOTTOM_LINKS.map(({ to, label, Icon }) => (
-              <li key={to}>
-                <Link
-                  to={to}
-                  className="flex items-center gap-2 rounded-sm text-sm text-ink-secondary transition-colors hover:text-ink-primary focus-visible:focus-ring"
-                >
-                  <Icon className="size-4 text-accent" aria-hidden="true" />
-                  <span>{label}</span>
-                </Link>
-              </li>
-            ))}
+            {cfg.bottom_links.map(({ to, label, icon }) => {
+              const Icon = resolveIcon(icon);
+              return (
+                <li key={to}>
+                  <Link
+                    to={to}
+                    className="flex items-center gap-2 rounded-sm text-sm text-ink-secondary transition-colors hover:text-ink-primary focus-visible:focus-ring"
+                  >
+                    <Icon className="size-4 text-accent" aria-hidden="true" />
+                    <span>{label}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
 
-          <p className="text-xs text-ink-tertiary">
-            &copy; 2007&ndash;{year} Lumen.com
-          </p>
+          <p className="text-xs text-ink-tertiary">{copyright}</p>
 
           <ul className="flex flex-wrap items-center justify-center gap-2">
-            {PAYMENT_METHODS.map((m) => (
+            {cfg.payment_methods.map((m) => (
               <li
                 key={m}
                 aria-label={m}
@@ -230,52 +140,55 @@ export default function Footer() {
   );
 }
 
-function TrustStrip() {
+function TrustStrip({ features }) {
   return (
     <div className="mx-auto max-w-content px-6 py-8">
       <ul className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {TRUST_FEATURES.map(({ Icon, title, sub }) => (
-          <li
-            key={title}
-            className="flex items-center gap-3 rounded-sm border border-line-subtle bg-bg-elevated p-3 transition-colors hover:border-line-strong"
-          >
-            <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-accent/10 text-accent">
-              <Icon className="size-5" aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink-primary">
-                {title}
-              </p>
-              <p className="truncate text-xs text-ink-tertiary">{sub}</p>
-            </div>
-          </li>
-        ))}
+        {features.map(({ icon, title, sub }) => {
+          const Icon = resolveIcon(icon);
+          return (
+            <li
+              key={title}
+              className="flex items-center gap-3 rounded-sm border border-line-subtle bg-bg-elevated p-3 transition-colors hover:border-line-strong"
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-accent/10 text-accent">
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-ink-primary">{title}</p>
+                <p className="truncate text-xs text-ink-tertiary">{sub}</p>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
 }
 
-function BrandBlock() {
+function BrandBlock({ brand }) {
   return (
-    <Link
-      to="/"
-      className="flex items-start gap-3 rounded-sm focus-visible:focus-ring"
-    >
+    <Link to="/" className="flex items-start gap-3 rounded-sm focus-visible:focus-ring">
       <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-accent text-ink-inverse">
         <Sparkles className="size-5" aria-hidden="true" />
       </span>
       <div>
-        <p className="text-h3 leading-none text-ink-primary">Lumen</p>
+        <p className="text-h3 leading-none text-ink-primary">{brand?.name || 'Lumen'}</p>
         <p className="mt-1.5 max-w-md text-sm text-ink-secondary">
-          Modern essentials, thoughtfully sourced. Join our newsletter for early
-          drops and member-only pricing.
+          {brand?.tagline || ''}
         </p>
       </div>
     </Link>
   );
 }
 
-function NewsletterForm() {
+function NewsletterForm({ newsletter = {} }) {
+  const {
+    placeholder = 'you@example.com',
+    note = 'No spam. Unsubscribe anytime.',
+    success = "You're on the list. Welcome to Lumen.",
+  } = newsletter;
+
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -317,7 +230,7 @@ function NewsletterForm() {
               setEmail(e.target.value);
               if (error) setError('');
             }}
-            placeholder="you@example.com"
+            placeholder={placeholder}
             autoComplete="email"
             aria-invalid={error ? 'true' : undefined}
             aria-describedby="footer-newsletter-msg"
@@ -357,18 +270,10 @@ function NewsletterForm() {
         aria-live="polite"
         className={cn(
           'mt-2 min-h-[1.25rem] text-xs',
-          error
-            ? 'text-danger'
-            : submitted
-              ? 'text-success'
-              : 'text-ink-tertiary',
+          error ? 'text-danger' : submitted ? 'text-success' : 'text-ink-tertiary',
         )}
       >
-        {error
-          ? error
-          : submitted
-            ? "You're on the list. Welcome to Lumen."
-            : 'No spam. Unsubscribe anytime.'}
+        {error ? error : submitted ? success : note}
       </p>
     </form>
   );

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin
@@ -41,3 +41,31 @@ def update_category(
 )
 def delete_category(category_id: int, db: Session = Depends(get_db)):
     CategoryService(db).delete(category_id)
+
+
+@router.post(
+    "/{category_id}/image",
+    response_model=CategoryRead,
+    dependencies=[Depends(require_admin)],
+)
+async def set_category_image(
+    category_id: int,
+    file: UploadFile,
+    db: Session = Depends(get_db),
+):
+    file_bytes = await file.read()
+    return CategoryService(db).set_image(
+        category_id,
+        file_bytes=file_bytes,
+        filename=file.filename or "image",
+        content_type=file.content_type or "",
+    )
+
+
+@router.delete(
+    "/{category_id}/image",
+    response_model=CategoryRead,
+    dependencies=[Depends(require_admin)],
+)
+def remove_category_image(category_id: int, db: Session = Depends(get_db)):
+    return CategoryService(db).remove_image(category_id)

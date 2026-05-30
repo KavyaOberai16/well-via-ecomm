@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0B0B0F" />
+    <meta name="theme-color" content="#F9FAFC" />
     <meta name="description" content="A premium modern shopping experience." />
     <title>Lumen — Premium Store</title>
     <!-- Apply the theme before paint to avoid a flash of the wrong theme. -->
@@ -13,7 +13,8 @@
         try {
           var t = localStorage.getItem('lumen-theme');
           if (t !== 'dark' && t !== 'light') {
-            t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            // Default the storefront to light out of the box; users can toggle.
+            t = 'light';
           }
           var root = document.documentElement;
           root.classList.remove('dark', 'light');

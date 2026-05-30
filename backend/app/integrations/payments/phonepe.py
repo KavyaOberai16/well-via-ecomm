@@ -61,7 +61,8 @@ class PhonePeProvider:
     ):
         if not merchant_id or not salt_key:
             raise PhonePeError(
-                "PhonePe is selected but PHONEPE_MERCHANT_ID/SALT_KEY are not configured."
+                "PhonePe is selected but its Merchant ID / Salt key are not set. "
+                "Fill them in Admin → Settings → Payments."
             )
         self.merchant_id = merchant_id
         self.salt_key = salt_key

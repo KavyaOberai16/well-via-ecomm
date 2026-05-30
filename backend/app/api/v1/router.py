@@ -8,9 +8,11 @@ from app.api.v1.endpoints import (
     cod,
     coupons,
     dashboard,
+    footer,
     hero_slides,
     loyalty,
     orders,
+    payment_gateway,
     payment_instruments,
     payments,
     products,
@@ -34,6 +36,7 @@ api_router.include_router(orders.router, prefix="/orders", tags=["orders"])
 api_router.include_router(payments.checkout_router, prefix="/checkout", tags=["checkout"])
 api_router.include_router(payments.payments_router, prefix="/payments", tags=["payments"])
 api_router.include_router(payment_instruments.router, prefix="/payments", tags=["payments"])
+api_router.include_router(payment_gateway.router, prefix="/payment-gateway", tags=["payments"])
 api_router.include_router(roles.router, prefix="/roles", tags=["roles"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(taxes.router, prefix="/taxes", tags=["taxes"])
@@ -53,3 +56,4 @@ api_router.include_router(cod.router, prefix="/cod", tags=["cod"])
 api_router.include_router(returns.admin_router, prefix="/returns/admin", tags=["returns"])
 api_router.include_router(returns.customer_router, prefix="/returns", tags=["returns"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
+api_router.include_router(footer.router, prefix="/footer", tags=["footer"])

@@ -7,9 +7,9 @@ export function cn(...inputs) {
 }
 
 /** Format a numeric value as a currency string. Server is authoritative for money. */
-export function formatPrice(value, currency = 'USD') {
+export function formatPrice(value, currency = 'INR') {
   const n = Number(value);
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,

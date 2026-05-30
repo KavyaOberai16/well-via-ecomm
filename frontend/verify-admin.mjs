@@ -74,7 +74,7 @@ try {
     await page.getByLabel('SKU').fill('QA-VERIFY-01');
     await page.getByLabel('Name').fill('QA Verify Product');
     await page.getByLabel('Description').fill('Temporary product created by the admin verification.');
-    await page.getByLabel('Price (USD)').fill('12.34');
+    await page.getByLabel('Price (INR)').fill('12.34');
     await page.getByLabel('Stock').fill('7');
     await page.screenshot({ path: `${SHOTS}/admin-03-form.png` });
     await page.getByRole('button', { name: /create product/i }).click();

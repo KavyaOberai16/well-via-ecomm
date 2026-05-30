@@ -81,97 +81,127 @@ export default function Hero() {
   const activeSlide = slides[index] ?? null;
 
   return (
-    <section
-      className="relative isolate overflow-hidden"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false);
-      }}
-    >
-      {/* Background layers */}
-      <div aria-hidden="true" className="absolute inset-0 -z-10">
-        {/* Static gradient fallback — always rendered, visible when no slides */}
-        <div className="absolute -top-1/3 left-1/2 size-[680px] -translate-x-1/2 rounded-full bg-accent/20 blur-[140px]" />
-        <div className="absolute bottom-0 right-0 size-[420px] rounded-full bg-accent/10 blur-[120px]" />
-        <div className="absolute inset-0 [background-image:linear-gradient(var(--grid-line)_1px,transparent_1px),linear-gradient(90deg,var(--grid-line)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_72%)]" />
+    <section className="mx-auto mt-6 max-w-content px-4 sm:px-6">
+      {/* Contained hero panel */}
+      <div
+        className="relative isolate overflow-hidden rounded-lg border border-line-subtle"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false);
+        }}
+      >
+        {/* Background layer */}
+        <div aria-hidden="true" className="absolute inset-0 -z-10">
+          {/* Base surface */}
+          <div className="absolute inset-0 bg-bg-elevated" />
 
-        {/* Crossfading slide images — rendered on top of gradient */}
-        {hasSlides && (
-          <AnimatePresence mode="sync">
-            {activeSlide && (
-              <SlideImage
-                key={activeSlide.id}
-                slide={activeSlide}
-                priority={index === 0}
-              />
-            )}
-          </AnimatePresence>
-        )}
+          {/* Decorative gradient blobs — soft brand tints, good on both themes */}
+          <div className="absolute -top-16 -left-16 size-72 rounded-full bg-indigo-300/25 blur-3xl dark:bg-indigo-500/15" />
+          <div className="absolute top-1/2 -right-20 size-80 rounded-full bg-violet-300/20 blur-3xl dark:bg-violet-500/12" />
+          <div className="absolute -bottom-12 left-1/3 size-64 rounded-full bg-pink-200/30 blur-3xl dark:bg-pink-500/10" />
 
-        {/* Dark scrim over images for text readability */}
-        {hasSlides && (
-          <div className="absolute inset-0 bg-black/40" />
-        )}
+          {/* Subtle dot-grid texture */}
+          <div className="absolute inset-0 [background-image:radial-gradient(circle,rgba(99,102,241,0.06)_1px,transparent_1px)] [background-size:28px_28px]" />
 
-        {/* Original scrim — gradient fade */}
-        <div className="absolute inset-0 bg-gradient-to-b from-bg-base/40 via-transparent to-bg-base" />
-      </div>
+          {/* Crossfading slide images when admin slides exist */}
+          {hasSlides && (
+            <AnimatePresence mode="sync">
+              {activeSlide && (
+                <SlideImage
+                  key={activeSlide.id}
+                  slide={activeSlide}
+                  priority={index === 0}
+                />
+              )}
+            </AnimatePresence>
+          )}
 
-      <div className="mx-auto flex min-h-[88vh] max-w-content flex-col items-center justify-center px-6 py-24 text-center lg:min-h-[min(92vh,880px)]">
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="flex flex-col items-center"
-        >
-          <motion.div variants={item}>
-            <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs text-ink-secondary">
-              <Sparkles className="size-3.5 text-accent" aria-hidden="true" />
-              New season — curated for 2026
-            </span>
-          </motion.div>
+          {/* Light scrim over images so dark text stays readable */}
+          {hasSlides && (
+            <div className="absolute inset-0 bg-bg-elevated/65" />
+          )}
+        </div>
 
-          <motion.h1
-            variants={item}
-            className="mt-6 max-w-3xl text-balance text-display text-ink-primary"
-          >
-            Shopping, refined to a feeling.
-          </motion.h1>
-
-          <motion.p
-            variants={item}
-            className="mt-5 max-w-xl text-balance text-base text-ink-secondary"
-          >
-            A premium store built for speed and delight — discover products
-            presented the way they deserve to be.
-          </motion.p>
-
+        {/* Content — two-column on lg */}
+        <div className="relative flex min-h-[420px] flex-col justify-center px-8 py-14 sm:px-12 sm:py-16 lg:min-h-[480px] lg:max-w-[62%] lg:py-20 lg:pl-14 lg:pr-0">
           <motion.div
-            variants={item}
-            className="mt-9 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row"
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="flex flex-col items-start"
           >
-            <Link
-              to="/products"
-              className={cn(buttonVariants({ variant: 'primary', size: 'lg' }), 'w-full sm:w-auto')}
-            >
-              Explore the collection
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
-            <Link
-              to="/products"
-              className={cn(buttonVariants({ variant: 'ghost', size: 'lg' }), 'w-full sm:w-auto')}
-            >
-              Browse new arrivals
-            </Link>
-          </motion.div>
-        </motion.div>
+            {/* Badge pill */}
+            <motion.div variants={item}>
+              <span className="inline-flex items-center gap-2 rounded-full border border-line-subtle bg-fill px-4 py-1.5 text-xs font-medium text-ink-secondary">
+                <Sparkles className="size-3.5 text-accent" aria-hidden="true" />
+                New season — curated for 2026
+              </span>
+            </motion.div>
 
-        {/* Slide indicator dots */}
+            {/* Headline */}
+            <motion.h1
+              variants={item}
+              className="mt-5 max-w-xl text-balance text-display text-ink-primary"
+            >
+              Shopping, refined to a feeling.
+            </motion.h1>
+
+            {/* Supporting copy */}
+            <motion.p
+              variants={item}
+              className="mt-4 max-w-prose text-balance text-body text-ink-secondary"
+            >
+              A premium store built for speed and delight. Curated essentials,
+              fair prices, and a checkout that just works.
+            </motion.p>
+
+            {/* CTA row */}
+            <motion.div
+              variants={item}
+              className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center"
+            >
+              <Link
+                to="/products"
+                className={cn(
+                  buttonVariants({ variant: 'primary', size: 'lg' }),
+                  'rounded-full w-full sm:w-auto',
+                )}
+              >
+                Explore the collection
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+              <Link
+                to="/products?sort=newest"
+                className={cn(
+                  buttonVariants({ variant: 'ghost', size: 'lg' }),
+                  'w-full sm:w-auto text-ink-secondary hover:text-ink-primary',
+                )}
+              >
+                Browse new arrivals
+                <ArrowRight className="size-3.5 opacity-60" aria-hidden="true" />
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+
+        {/* Right decorative area — CSS-only blobs, visible when no slide image */}
+        {!hasSlides && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-0 hidden w-[38%] lg:block"
+          >
+            <div className="absolute right-12 top-1/2 size-40 -translate-y-1/2 rounded-full bg-gradient-to-br from-indigo-200 to-violet-200 opacity-60 blur-md dark:from-indigo-700/40 dark:to-violet-700/30" />
+            <div className="absolute right-28 top-1/4 size-20 rounded-full bg-gradient-to-br from-pink-200 to-rose-200 opacity-50 blur-sm dark:from-pink-700/30 dark:to-rose-700/20" />
+            <div className="absolute right-8 bottom-12 size-24 rounded-full bg-gradient-to-br from-sky-200 to-indigo-200 opacity-40 blur-sm dark:from-sky-700/30 dark:to-indigo-700/20" />
+          </div>
+        )}
+
+        {/* Slide indicator dots — only when multiple slides exist */}
         {hasSlides && slides.length > 1 && (
           <div
-            className="absolute bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-2"
+            className="absolute bottom-6 right-8 flex items-center gap-2"
             role="tablist"
             aria-label="Hero slides"
           >
@@ -187,7 +217,7 @@ export default function Hero() {
                   'rounded-full transition-all duration-300 focus-visible:focus-ring',
                   i === index
                     ? 'h-2 w-6 bg-accent'
-                    : 'size-2 bg-white/50 hover:bg-white/80',
+                    : 'size-2 bg-ink-tertiary/50 hover:bg-ink-tertiary/80',
                 )}
               />
             ))}

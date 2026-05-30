@@ -10,7 +10,7 @@ import { formatPrice } from '@/lib/utils.js';
 import { fadeUp } from '@/lib/motion.js';
 
 /**
- * Stand-in for PhonePe's hosted page when PAYMENT_PROVIDER=mock.
+ * Stand-in for PhonePe's hosted page when the active payment gateway is "mock".
  * Two buttons — approve / decline — POST the decision to our webhook,
  * then redirect the user to the `return` URL the backend embedded.
  */
@@ -97,7 +97,7 @@ export default function PaymentMockPage() {
             )}
 
             <p className="mt-6 text-center text-xs text-ink-tertiary">
-              This page only exists in <code>PAYMENT_PROVIDER=mock</code> mode.
+              This page only exists while the payment gateway is set to <code>Mock</code>.
               With real PhonePe creds, you&apos;d be on phonepe.com instead.
             </p>
           </div>

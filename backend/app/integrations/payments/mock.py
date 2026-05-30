@@ -1,4 +1,4 @@
-"""In-process mock provider used when PAYMENT_PROVIDER=mock.
+"""In-process mock provider used when the active payment gateway is "mock".
 
 The user is redirected to a local simulator page on the frontend
 (``/payments/mock/{merchantTransactionId}``). That page POSTs the user's

@@ -87,15 +87,14 @@ class Settings(BaseSettings):
     # backend; if you're behind a different proxy add its IP here.
     TRUSTED_PROXIES: List[str] = ["127.0.0.1", "::1"]
 
-    # Payments. PAYMENT_PROVIDER: "mock" (dev: local simulator) or "phonepe" (real).
-    # PHONEPE_ENV: "sandbox" or "production" — selects the PhonePe API base URL.
-    # PAYMENT_RETURN_URL is where PhonePe sends the user's browser back to after
-    # the payment screen; the frontend route there polls /payments/{txn}/status.
-    PAYMENT_PROVIDER: str = "mock"
-    PHONEPE_ENV: str = "sandbox"
-    PHONEPE_MERCHANT_ID: str = ""
-    PHONEPE_SALT_KEY: str = ""
-    PHONEPE_SALT_INDEX: int = 1
+    # Payments. The active gateway ("mock"/"phonepe") and the PhonePe
+    # credentials now live in the database (system_settings, editable in
+    # Admin → Settings → Payments) and are read per-request by
+    # get_payment_provider(db). Only the deployment-specific URLs stay here:
+    #   PAYMENT_RETURN_URL  — where PhonePe sends the user's browser back to
+    #                         after the payment screen; the frontend route
+    #                         there polls /payments/{txn}/status.
+    #   PAYMENT_WEBHOOK_URL — the S2S callback URL handed to PhonePe.
     PAYMENT_RETURN_URL: str = "http://localhost:5173/payments/return"
     PAYMENT_WEBHOOK_URL: str = "http://localhost:8000/api/v1/payments/webhook/phonepe"
 

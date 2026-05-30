@@ -444,8 +444,8 @@ export default function AdminDashboardPage() {
   const [period, setPeriod] = useState('30d');
   const { data, isLoading, isError, refetch } = useDashboardOverview(period);
   // KPI cards format money — pick a currency once. Real orders' currency comes
-  // from the recent_orders list; falls back to USD on a fresh store.
-  const currency = data?.recent_orders?.[0]?.currency || 'USD';
+  // from the recent_orders list; falls back to INR on a fresh store.
+  const currency = data?.recent_orders?.[0]?.currency || 'INR';
 
   const summary = data?.summary;
   const fmtMoney = (v) => formatPrice(v, currency);

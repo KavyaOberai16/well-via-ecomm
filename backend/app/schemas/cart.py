@@ -36,7 +36,7 @@ class CartRead(BaseModel):
     discount_amount: Decimal
     total: Decimal
     coupon_code: str | None = None
-    currency: str = "USD"
+    currency: str = "INR"
 
 
 class CouponApplyRequest(BaseModel):

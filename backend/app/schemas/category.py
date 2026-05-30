@@ -17,3 +17,4 @@ class CategoryRead(BaseModel):
     id: int
     name: str
     slug: str
+    image_url: str | None = None
