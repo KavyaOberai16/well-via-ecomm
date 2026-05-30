@@ -65,8 +65,12 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle />
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          {/* Theme toggle lives in the bar on >=sm; on phones it moves into the
+              menu to keep the top bar uncluttered. */}
+          <span className="hidden sm:inline-flex">
+            <ThemeToggle />
+          </span>
           <Link
             to="/cart"
             aria-label="Cart"
@@ -106,7 +110,7 @@ export default function Navbar() {
                       onClick={() => setOpen(false)}
                       className={({ isActive }) =>
                         cn(
-                          'block rounded-sm px-3 py-2.5 text-sm transition-colors focus-visible:focus-ring',
+                          'block rounded-sm px-3 py-2.5 text-base transition-colors focus-visible:focus-ring',
                           isActive
                             ? 'bg-fill text-ink-primary'
                             : 'text-ink-secondary hover:text-ink-primary',
@@ -118,6 +122,23 @@ export default function Navbar() {
                   </li>
                 ),
               )}
+
+              {!user && (
+                <li>
+                  <NavLink
+                    to="/login"
+                    onClick={() => setOpen(false)}
+                    className="block rounded-sm px-3 py-2.5 text-base font-medium text-accent focus-visible:focus-ring"
+                  >
+                    Sign in
+                  </NavLink>
+                </li>
+              )}
+
+              <li className="mt-1 flex items-center justify-between border-t border-line-subtle px-3 pt-3">
+                <span className="text-sm text-ink-secondary">Theme</span>
+                <ThemeToggle />
+              </li>
             </ul>
           </motion.div>
         )}

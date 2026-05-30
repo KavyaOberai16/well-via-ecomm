@@ -18,6 +18,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { Page } from '@/components/layout/Page.jsx';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs.jsx';
 import { Button } from '@/components/ui/Button.jsx';
 import { Card } from '@/components/ui/Card.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
@@ -305,6 +306,11 @@ export default function CheckoutPage() {
 
   return (
     <Page>
+      <Breadcrumbs
+        items={[{ label: 'Cart', to: '/cart' }]}
+        current="Checkout"
+        className="mb-6"
+      />
       <Link
         to="/cart"
         className="inline-flex items-center gap-1 text-sm text-ink-secondary hover:text-ink-primary"

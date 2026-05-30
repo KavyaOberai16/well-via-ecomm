@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, ShoppingBag, Trash2, ArrowRight, Lock, AlertTriangle, Check } from 'lucide-react';
 import { Page } from '@/components/layout/Page.jsx';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs.jsx';
 import { Button } from '@/components/ui/Button.jsx';
 import { Card } from '@/components/ui/Card.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
@@ -147,6 +148,7 @@ export default function WishlistPage() {
 
   return (
     <Page>
+      <Breadcrumbs current="Wishlist" className="mb-6" />
       <div className="flex items-end justify-between gap-3">
         <div>
           <h1 className="text-h1 text-ink-primary">Your wishlist</h1>

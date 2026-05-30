@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/services/apiClient.js';
 import { Page } from '@/components/layout/Page.jsx';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs.jsx';
 import { Card } from '@/components/ui/Card.jsx';
 import { Button } from '@/components/ui/Button.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
@@ -188,6 +189,7 @@ export default function OrdersPage() {
 
   return (
     <Page>
+      <Breadcrumbs current="Orders" className="mb-6" />
       <h1 className="text-h1 text-ink-primary">Your orders</h1>
       <p className="mt-1 text-sm text-ink-secondary">
         Everything you&apos;ve bought, newest first.

@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Truck, ShieldCheck, Sparkles, PackageX } from 'lucide-react';
+import { ArrowRight, PackageX } from 'lucide-react';
 import Hero from '@/components/marketing/Hero.jsx';
 import CategoryCircles from '@/components/marketing/CategoryCircles.jsx';
+import DealsBanner from '@/components/marketing/DealsBanner.jsx';
 import BestsellersSection from '@/components/marketing/BestsellersSection.jsx';
+import CommunityBand from '@/components/marketing/CommunityBand.jsx';
 import { Page } from '@/components/layout/Page.jsx';
 import { ProductGrid } from '@/features/products/components/ProductGrid.jsx';
 import { EmptyState } from '@/components/feedback/EmptyState.jsx';
@@ -11,25 +13,7 @@ import { buttonVariants } from '@/components/ui/Button.jsx';
 import { useProducts } from '@/features/products/hooks.js';
 import { useAddToCart } from '@/features/cart/hooks.js';
 import { cn } from '@/lib/utils.js';
-import { fadeUp, staggerContainer } from '@/lib/motion.js';
-
-const PERKS = [
-  {
-    icon: Truck,
-    title: 'Free delivery',
-    text: 'On every order',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Secure checkout',
-    text: 'Encrypted & private',
-  },
-  {
-    icon: Sparkles,
-    title: 'Curated quality',
-    text: 'Hand-selected',
-  },
-];
+import { fadeUp } from '@/lib/motion.js';
 
 export default function HomePage() {
   const { data, isLoading } = useProducts({ page: 1, page_size: 8 });
@@ -38,44 +22,19 @@ export default function HomePage() {
 
   return (
     <Page bleed>
-      {/* A) Hero — contained, light, illustrated panel */}
+      {/* A) Hero — product showcase + mega-sale countdown */}
       <Hero />
 
       {/* B) Curated for You — category circles */}
       <CategoryCircles />
 
-      {/* C) Bestsellers */}
+      {/* C) Biggest sale promo banner */}
+      <DealsBanner />
+
+      {/* D) Bestsellers */}
       <BestsellersSection />
 
-      {/* E) Trust strip — slim bordered bar between Bestsellers and Featured */}
-      <div className="mx-auto mt-16 max-w-content px-4 sm:px-6">
-        <motion.ul
-          className="flex flex-col divide-y divide-line-subtle overflow-hidden rounded-lg border border-line-subtle sm:flex-row sm:divide-x sm:divide-y-0"
-          variants={staggerContainer(0.08)}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.3 }}
-          role="list"
-        >
-          {PERKS.map((p) => (
-            <motion.li
-              key={p.title}
-              variants={fadeUp}
-              className="flex flex-1 items-center gap-3 bg-bg-elevated px-5 py-4"
-            >
-              <span className="grid size-9 shrink-0 place-items-center rounded-sm bg-accent/10 text-accent">
-                <p.icon className="size-4" aria-hidden="true" />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-ink-primary">{p.title}</p>
-                <p className="text-xs text-ink-secondary">{p.text}</p>
-              </div>
-            </motion.li>
-          ))}
-        </motion.ul>
-      </div>
-
-      {/* F) Featured grid */}
+      {/* E) Featured grid */}
       <section className="mx-auto mt-16 max-w-content px-4 sm:px-6">
         <motion.header
           className="flex items-end justify-between gap-4"
@@ -99,7 +58,7 @@ export default function HomePage() {
           </Link>
         </motion.header>
 
-        <div className="mt-8 pb-16">
+        <div className="mt-8">
           {!isLoading && products.length === 0 ? (
             <EmptyState
               icon={PackageX}
@@ -120,6 +79,9 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+      {/* F) Join the community */}
+      <CommunityBand />
     </Page>
   );
 }

@@ -13,6 +13,7 @@ import {
   Minus,
 } from 'lucide-react';
 import { Page } from '@/components/layout/Page.jsx';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs.jsx';
 import { Button } from '@/components/ui/Button.jsx';
 import { Card } from '@/components/ui/Card.jsx';
 import { Input } from '@/components/ui/Input.jsx';
@@ -177,6 +178,7 @@ export default function CartPage() {
 
   return (
     <Page>
+      <Breadcrumbs current="Cart" className="mb-6" />
       <h1 className="text-h1 text-ink-primary">Your cart</h1>
 
       {isLoading ? (

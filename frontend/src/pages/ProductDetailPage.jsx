@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ChevronRight, AlertTriangle, Home } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { Page } from '@/components/layout/Page.jsx';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs.jsx';
 import { Button } from '@/components/ui/Button.jsx';
 import { Badge } from '@/components/ui/Badge.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
@@ -16,28 +17,32 @@ import { useCategories } from '@/features/categories/hooks.js';
 import { stockLabel } from '@/lib/utils.js';
 import { useTrackProductView } from '@/features/history/store.js';
 
-import { GalleryAmz } from '@/features/products/components/GalleryAmz.jsx';
-import { OfferStrip } from '@/features/products/components/OfferStrip.jsx';
-import { AboutThisItem } from '@/features/products/components/AboutThisItem.jsx';
-import { SpecTable } from '@/features/products/components/SpecTable.jsx';
-import { BuyBox } from '@/features/products/components/BuyBox.jsx';
 import { FrequentlyBoughtTogether } from '@/features/products/components/FrequentlyBoughtTogether.jsx';
 import { ProductRail } from '@/features/products/components/ProductRail.jsx';
 import { BrowsingHistoryRail } from '@/features/history/BrowsingHistoryRail.jsx';
-import { StarRating } from '@/features/reviews/StarRating.jsx';
 import { CustomerReviewsSection } from '@/features/reviews/CustomerReviewsSection.jsx';
 
+import { Aura, Reveal } from '@/features/products/components/luxury/luxe.jsx';
+import { LuxuryGallery } from '@/features/products/components/luxury/LuxuryGallery.jsx';
+import { LuxuryBuyPanel } from '@/features/products/components/luxury/LuxuryBuyPanel.jsx';
+import { KeyFeatures } from '@/features/products/components/luxury/KeyFeatures.jsx';
+import { TrustRow } from '@/features/products/components/luxury/TrustRow.jsx';
+import { LifestyleBanner } from '@/features/products/components/luxury/LifestyleBanner.jsx';
+import { CustomerSay } from '@/features/products/components/luxury/CustomerSay.jsx';
+import { StickyBuyBar } from '@/features/products/components/luxury/StickyBuyBar.jsx';
+
 /**
- * Amazon-style product detail page.
+ * Luxury product detail page — Apple / Aesop / Nothing inspired.
  *
- * Layout (>=lg):  | thumbs | main image | info + offers + bullets + spec | buy box |
- *   3 visual columns (gallery + info + buy box). Below the fold: FBT bundle,
- *   then "Customers also viewed" rail.
+ * Layout (>=lg):  | large frosted gallery | product info + glass buy panel |
+ *   Below: trust strip → highlights → lifestyle banner → frequently bought
+ *   together → recommendation rails → reviews. A scroll-activated buy bar keeps
+ *   the CTA reachable throughout.
  *
- * Layout (<lg):  the columns stack — gallery, info, buy box, rails.
- *
- * The page treats `description` honestly: if a structured field doesn't exist
- * on the backend (reviews, MRP, variants) it's omitted rather than faked.
+ * The premium feel is layered with theme tokens + soft lavender ambient light,
+ * so it reads as a flagship in BOTH light and dark mode. Every section is
+ * data-honest: anything without backing data (video, 360, highlights) simply
+ * doesn't render rather than showing placeholders.
  */
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -65,140 +70,107 @@ export default function ProductDetailPage() {
 
   return (
     <Page>
-      <Breadcrumbs product={product} categoryName={categoryName} />
+      <div className="relative isolate">
+        <Aura />
 
-      {/* Above the fold: gallery | info | buy box */}
-      <div className="mt-4 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_320px] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_360px]">
-        {/* Gallery */}
-        <section aria-label="Product images">
-          <GalleryAmz product={product} />
-        </section>
+        <Breadcrumbs
+          items={[
+            { label: 'Shop', to: '/products' },
+            ...(categoryName
+              ? [
+                  {
+                    label: categoryName,
+                    to: `/products?category_id=${product.category_id}`,
+                  },
+                ]
+              : []),
+          ]}
+          current={product.name}
+        />
 
-        {/* Info column */}
-        <section aria-label="Product details" className="min-w-0">
-          {categoryName && (
-            <Link
-              to={`/products?category_id=${product.category_id}`}
-              className="text-sm text-accent hover:underline"
-            >
-              Visit the {categoryName} store
-            </Link>
-          )}
-          <h1 className="mt-1 text-h2 text-ink-primary text-balance">{product.name}</h1>
+        {/* Hero: gallery | info + buy panel. Plain sections (no Reveal
+            transform) so the sticky gallery isn't broken by an animated
+            ancestor; the Page wrapper already provides the entrance. */}
+        <div className="mt-6 grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
+          <section className="lg:sticky lg:top-24 lg:z-30 lg:self-start">
+            <LuxuryGallery product={product} />
+          </section>
 
-          {/* Rating + count, anchor-links to the reviews section. */}
-          {Number(product.rating_count) > 0 && (
-            <a
-              href="#reviews"
-              className="mt-2 inline-flex items-center gap-2 rounded-sm text-sm text-ink-secondary hover:text-ink-primary focus-visible:focus-ring"
-            >
-              <StarRating value={Number(product.rating_avg) || 0} size="sm" />
-              <span className="tabular-nums">
-                {Number(product.rating_avg).toFixed(1)}
-              </span>
-              <span className="text-ink-tertiary">
-                ({Number(product.rating_count).toLocaleString()} rating
-                {product.rating_count === 1 ? '' : 's'})
-              </span>
-            </a>
-          )}
-
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <section className="relative min-w-0 lg:z-10">
             {categoryName && (
-              <Badge tone="accent" className="text-[11px]">
+              <Link
+                to={`/products?category_id=${product.category_id}`}
+                className="text-xs font-semibold uppercase tracking-[0.18em] text-accent hover:underline"
+              >
                 {categoryName}
-              </Badge>
+              </Link>
             )}
-            <Badge tone={stock.tone} className="text-[11px]">
-              {stock.text}
-            </Badge>
-            <span className="text-xs text-ink-tertiary">SKU: {product.sku}</span>
-          </div>
+            <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-ink-primary text-balance sm:text-5xl">
+              {product.name}
+            </h1>
 
-          <div className="mt-4 h-px bg-line-subtle" />
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <Badge tone={stock.tone} className="text-[11px]">
+                {stock.text}
+              </Badge>
+              <span className="text-xs text-ink-tertiary">SKU: {product.sku}</span>
+            </div>
 
-          <OfferStrip />
+            {product.description && (
+              <p className="mt-5 max-w-prose text-body leading-relaxed text-ink-secondary">
+                {product.description}
+              </p>
+            )}
 
-          <AboutThisItem product={product} categoryName={categoryName} />
-
-          <SpecTable product={product} categoryName={categoryName} />
-        </section>
-
-        {/* Buy box */}
-        <div>
-          <BuyBox product={product} />
+            <div id="pdp-buybox" className="mt-8">
+              <LuxuryBuyPanel product={product} />
+            </div>
+          </section>
         </div>
+
+        <TrustRow />
+
+        <KeyFeatures product={product} />
+
+        <LifestyleBanner product={product} />
+
+        <Reveal className="mt-20">
+          <FrequentlyBoughtTogether
+            product={product}
+            related={related}
+            isLoading={relatedLoading}
+          />
+        </Reveal>
+
+        <CustomerSay product={product} />
+
+        <ProductRail
+          title="You may also like"
+          products={likely?.length ? likely : coPurchased}
+          isLoading={likelyLoading && coPurchasedLoading}
+        />
+
+        <BrowsingHistoryRail excludeId={product.id} title="Recently viewed" />
+
+        <CustomerReviewsSection product={product} />
       </div>
 
-      <FrequentlyBoughtTogether
-        product={product}
-        related={related}
-        isLoading={relatedLoading}
-      />
-
-      <ProductRail
-        title="Related items bought by customers"
-        products={coPurchased}
-        isLoading={coPurchasedLoading}
-      />
-
-      <ProductRail
-        title="Relevant items customers are likely to buy"
-        products={likely}
-        isLoading={likelyLoading}
-      />
-
-      <BrowsingHistoryRail excludeId={product.id} />
-
-      <CustomerReviewsSection product={product} />
+      <StickyBuyBar product={product} />
     </Page>
-  );
-}
-
-function Breadcrumbs({ product, categoryName }) {
-  return (
-    <nav
-      aria-label="Breadcrumb"
-      className="flex items-center gap-1 text-xs text-ink-tertiary"
-    >
-      <Link to="/" className="inline-flex items-center gap-1 hover:text-ink-secondary">
-        <Home className="size-3" aria-hidden="true" />
-        Home
-      </Link>
-      <ChevronRight className="size-3" aria-hidden="true" />
-      <Link to="/products" className="hover:text-ink-secondary">
-        Shop
-      </Link>
-      {categoryName && (
-        <>
-          <ChevronRight className="size-3" aria-hidden="true" />
-          <Link
-            to={`/products?category_id=${product.category_id}`}
-            className="hover:text-ink-secondary"
-          >
-            {categoryName}
-          </Link>
-        </>
-      )}
-      <ChevronRight className="size-3" aria-hidden="true" />
-      <span className="truncate text-ink-secondary">{product.name}</span>
-    </nav>
   );
 }
 
 function Loading() {
   return (
     <Page>
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_320px]">
-        <Skeleton className="aspect-square rounded-md" />
-        <div className="flex flex-col gap-3">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+        <Skeleton className="aspect-square rounded-lg" />
+        <div className="flex flex-col gap-4">
           <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-10 w-3/4" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-80 w-full rounded-lg" />
         </div>
-        <Skeleton className="h-72 rounded-lg" />
       </div>
     </Page>
   );

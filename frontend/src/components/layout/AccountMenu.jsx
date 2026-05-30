@@ -41,7 +41,7 @@ export default function AccountMenu() {
     return (
       <Link
         to="/login"
-        className="rounded-sm px-3 py-2 text-sm text-ink-secondary transition-colors hover:text-ink-primary focus-visible:focus-ring"
+        className="inline-flex items-center whitespace-nowrap rounded-full border border-line-subtle px-4 py-1.5 text-sm font-medium text-ink-secondary transition-colors hover:border-line-strong hover:text-ink-primary focus-visible:focus-ring"
       >
         Sign in
       </Link>

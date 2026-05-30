@@ -107,7 +107,7 @@ export function FrequentlyBoughtTogether({ product, related, isLoading }) {
               type="button"
               onClick={addAll}
               disabled={selectedCount === 0 || addToCart.isPending}
-              className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#f7c64a] text-sm font-semibold text-[#1a1408] transition-[transform,filter] hover:brightness-105 hover:-translate-y-px focus-visible:focus-ring disabled:opacity-40 disabled:pointer-events-none"
+              className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-accent text-sm font-semibold text-ink-inverse shadow-glow transition-[transform,filter] hover:brightness-105 hover:-translate-y-px focus-visible:focus-ring disabled:opacity-40 disabled:pointer-events-none"
             >
               {doneAt ? (
                 <>

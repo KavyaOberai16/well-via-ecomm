@@ -16,6 +16,7 @@ import {
   ArrowUp,
 } from 'lucide-react';
 import { Page } from '@/components/layout/Page.jsx';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs.jsx';
 import { Button } from '@/components/ui/Button.jsx';
 import { Card } from '@/components/ui/Card.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
@@ -255,6 +256,7 @@ export default function RewardsPage() {
 
   return (
     <Page>
+      <Breadcrumbs current="Rewards" className="mb-6" />
       <h1 className="text-h1 text-ink-primary">Rewards</h1>
 
       {isLoading ? (

@@ -160,19 +160,19 @@ export function ProductCard({ product, onQuickAdd }) {
               {product.name}
             </h3>
             {onSale ? (
-              <p className="mt-1 flex items-baseline gap-2">
+              <p className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <span className="text-lg font-semibold tabular-nums text-danger sm:text-h3">
+                  {formatPrice(product.price)}
+                </span>
                 <s
-                  className="text-sm text-ink-tertiary"
+                  className="text-xs tabular-nums text-ink-tertiary sm:text-sm"
                   aria-label={`Was ${formatPrice(product.compare_at_price)}`}
                 >
                   {formatPrice(product.compare_at_price)}
                 </s>
-                <span className="text-h3 text-danger">
-                  {formatPrice(product.price)}
-                </span>
               </p>
             ) : (
-              <p className="mt-1 text-h3 text-ink-primary">
+              <p className="mt-1 text-lg font-semibold tabular-nums text-ink-primary sm:text-h3">
                 {formatPrice(product.price)}
               </p>
             )}
