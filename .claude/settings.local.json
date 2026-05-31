@@ -93,7 +93,10 @@
       "Bash(xargs wc -l)",
       "PowerShell(Get-Item *)",
       "PowerShell(\\(Get-ChildItem -Path \"d:\\\\ng\\\\simple ecomers\\\\frontend;C\" -Recurse -Force -ErrorAction SilentlyContinue | Measure-Object\\).Count)",
-      "PowerShell(Get-ChildItem -Path \"D:\\\\ng\\\\simple ecomers\\\\docker\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"D:\\\\ng\\\\simple ecomers\\\\\", \"\"\\) })"
+      "PowerShell(Get-ChildItem -Path \"D:\\\\ng\\\\simple ecomers\\\\docker\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"D:\\\\ng\\\\simple ecomers\\\\\", \"\"\\) })",
+      "Bash(git add *)",
+      "Bash(git commit -m '@ *)",
+      "Bash(git commit *)"
     ]
   }
 }
