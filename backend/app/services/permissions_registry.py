@@ -15,6 +15,8 @@ class PermissionDef:
 
 
 PERMISSIONS: tuple[PermissionDef, ...] = (
+    # Dashboard
+    PermissionDef("dashboard.view", "View the admin dashboard overview", "Dashboard"),
     # Products
     PermissionDef("products.view", "View products in admin", "Products"),
     PermissionDef("products.create", "Create products", "Products"),
