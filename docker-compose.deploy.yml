@@ -46,7 +46,8 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"
+      # pg_360 owns :80 on this host; simple-com is published on :8080.
+      - "8080:80"
 
 volumes:
   redis_data:
