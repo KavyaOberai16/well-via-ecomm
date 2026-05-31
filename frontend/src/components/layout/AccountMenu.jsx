@@ -49,6 +49,9 @@ export default function AccountMenu() {
   }
 
   const initial = (user.email || '?').charAt(0).toUpperCase();
+  // Staff = legacy admin flag OR any assigned role. Mirrors <RequireAdmin>,
+  // so anyone who can enter the admin shell also sees the shortcut to it.
+  const isStaff = !!user.is_admin || (Array.isArray(user.roles) && user.roles.length > 0);
 
   async function handleSignOut() {
     setOpen(false);
@@ -102,7 +105,7 @@ export default function AccountMenu() {
               )}
             </div>
 
-            {user.is_admin && (
+            {isStaff && (
               <Link
                 to="/admin"
                 role="menuitem"
