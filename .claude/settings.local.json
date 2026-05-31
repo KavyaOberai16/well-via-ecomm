@@ -96,7 +96,9 @@
       "PowerShell(Get-ChildItem -Path \"D:\\\\ng\\\\simple ecomers\\\\docker\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"D:\\\\ng\\\\simple ecomers\\\\\", \"\"\\) })",
       "Bash(git add *)",
       "Bash(git commit -m '@ *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(python scripts/_diag_rbac.py)",
+      "Bash(py scripts/_diag_rbac.py)"
     ]
   }
 }
