@@ -7,6 +7,9 @@ import {
   GripVertical,
   ChevronDown,
   ChevronUp,
+  Upload,
+  ImageOff,
+  Loader2,
 } from 'lucide-react';
 import { AdminPage } from '@/components/admin/AdminPage.jsx';
 import { Button } from '@/components/ui/Button.jsx';
@@ -16,7 +19,11 @@ import { Textarea } from '@/components/ui/Textarea.jsx';
 import { Card, CardBody } from '@/components/ui/Card.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { cn } from '@/lib/utils.js';
-import { useFooterConfig, useUpdateFooterConfig } from '@/features/footer/hooks.js';
+import {
+  useFooterConfig,
+  useUpdateFooterConfig,
+  useUploadFooterLogo,
+} from '@/features/footer/hooks.js';
 import {
   FOOTER_DEFAULTS,
   TRUST_ICON_NAMES,
@@ -130,14 +137,91 @@ function ListRow({ children, onRemove, className }) {
 // Section editors
 // ---------------------------------------------------------------------------
 
+function LogoUploader({ brand, onChange }) {
+  const upload = useUploadFooterLogo();
+  const [err, setErr] = useState('');
+
+  async function onPick(e) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-picking the same file
+    if (!file) return;
+    setErr('');
+    try {
+      const { url } = await upload.mutateAsync(file);
+      onChange({ ...brand, logo_url: url });
+    } catch (e2) {
+      setErr(
+        e2?.response?.data?.error?.message ||
+          e2?.response?.data?.detail ||
+          'Could not upload the logo. Please try a PNG, SVG or WebP under 15 MB.',
+      );
+    }
+  }
+
+  return (
+    <div className="sm:col-span-2">
+      <p className="mb-1.5 text-sm font-medium text-ink-secondary">Logo</p>
+      <div className="flex flex-wrap items-center gap-4">
+        {/* Preview */}
+        <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-sm border border-line-subtle bg-bg-sunken">
+          {brand.logo_url ? (
+            <img
+              src={brand.logo_url}
+              alt="Brand logo preview"
+              className="size-full object-contain p-2"
+            />
+          ) : (
+            <ImageOff className="size-6 text-ink-tertiary" aria-hidden="true" />
+          )}
+        </div>
+
+        <div className="flex flex-col items-start gap-2">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-sm border border-line-subtle bg-bg-elevated px-3 py-2 text-sm text-ink-primary transition-colors hover:border-line-strong focus-within:focus-ring">
+            {upload.isPending ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Upload className="size-4" aria-hidden="true" />
+            )}
+            {brand.logo_url ? 'Replace logo' : 'Upload logo'}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml,image/avif"
+              onChange={onPick}
+              disabled={upload.isPending}
+              className="sr-only"
+            />
+          </label>
+          {brand.logo_url && (
+            <button
+              type="button"
+              onClick={() => onChange({ ...brand, logo_url: '' })}
+              className="flex items-center gap-1.5 text-xs text-ink-tertiary hover:text-danger focus-visible:focus-ring transition-colors"
+            >
+              <Trash2 className="size-3.5" aria-hidden="true" />
+              Remove logo
+            </button>
+          )}
+        </div>
+      </div>
+      <p className="mt-1.5 text-xs text-ink-tertiary">
+        Shown in the navbar and footer in place of the name. Use a transparent PNG or SVG —
+        works best on both light and dark backgrounds. Leave empty to show the brand name instead.
+      </p>
+      {err && <p className="mt-1 text-xs text-danger">{err}</p>}
+    </div>
+  );
+}
+
 function BrandEditor({ brand, onChange }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
+      <LogoUploader brand={brand} onChange={onChange} />
       <Input
         label="Brand name"
         value={brand.name}
         onChange={(e) => onChange({ ...brand, name: e.target.value })}
         placeholder="Lumen"
+        helper="Used as the alt text / fallback when no logo is uploaded."
       />
       <div className="sm:col-span-2">
         <Textarea

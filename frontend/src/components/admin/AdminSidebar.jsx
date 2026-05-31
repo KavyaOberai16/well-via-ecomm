@@ -24,6 +24,7 @@ import {
   LayoutPanelTop,
   ChevronDown,
   LayoutTemplate,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils.js';
 import { useAuthStore } from '@/features/auth/store.js';
@@ -56,6 +57,7 @@ const FRONTEND_GROUP = {
   children: [
     { to: '/admin/hero', label: 'Hero slides', icon: GalleryHorizontal, end: false, permission: 'hero_slides.manage' },
     { to: '/admin/footer', label: 'Footer', icon: LayoutTemplate, end: false, permission: 'frontend.manage' },
+    { to: '/admin/pages', label: 'Company pages', icon: FileText, end: false, permission: 'frontend.manage' },
   ],
 };
 

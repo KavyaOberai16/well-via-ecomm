@@ -22,7 +22,11 @@ class HeroSlideService:
         return self.repo.list_all()
 
     def create(
-        self, file_bytes: bytes, filename: str, content_type: str, alt: str | None
+        self,
+        file_bytes: bytes,
+        filename: str,
+        content_type: str,
+        fields: dict | None = None,
     ) -> HeroSlide:
         if (content_type or "").lower() not in CONTENT_TYPE_EXT:
             raise ValidationError(f"Unsupported image type: {content_type or 'unknown'}")
@@ -32,7 +36,12 @@ class HeroSlideService:
 
         sort_order = self.repo.max_sort_order() + 1
         url = self.storage.save(data=file_bytes, filename=filename, content_type=content_type)
-        slide = HeroSlide(image_url=url, alt=alt, sort_order=sort_order, is_active=True)
+        # `fields` is a pre-validated dict of optional content columns supplied
+        # by the create endpoint (heading, eyebrow, perks, …). Columns absent
+        # from the dict fall back to their model/server defaults.
+        slide = HeroSlide(
+            image_url=url, sort_order=sort_order, is_active=True, **(fields or {})
+        )
         self.repo.add(slide)
         self.db.commit()
         return self.repo.get(slide.id)

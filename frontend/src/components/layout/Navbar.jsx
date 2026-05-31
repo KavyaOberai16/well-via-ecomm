@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Menu, X, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils.js';
 import { useAuthStore } from '@/features/auth/store.js';
+import { useFooterConfig } from '@/features/footer/hooks.js';
+import { FOOTER_DEFAULTS } from '@/features/footer/defaults.js';
 import { ThemeToggle } from '@/components/ui/ThemeToggle.jsx';
 import AccountMenu from './AccountMenu.jsx';
 
@@ -16,6 +18,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
+  const { data: footer } = useFooterConfig();
+  const brand = { ...FOOTER_DEFAULTS.brand, ...footer?.brand };
 
   const links = user?.is_admin ? [...LINKS, { to: '/admin', label: 'Admin' }] : LINKS;
 
@@ -38,10 +42,20 @@ export default function Navbar() {
           to="/"
           className="flex items-center gap-2 rounded-sm text-ink-primary focus-visible:focus-ring"
         >
-          <span className="grid size-8 place-items-center rounded-sm bg-accent text-ink-inverse">
-            <Sparkles className="size-4" aria-hidden="true" />
-          </span>
-          <span className="text-h3">Lumen</span>
+          {brand.logo_url ? (
+            <img
+              src={brand.logo_url}
+              alt={brand.name || 'Lumen'}
+              className="h-8 w-auto max-w-[160px] object-contain"
+            />
+          ) : (
+            <>
+              <span className="grid size-8 place-items-center rounded-sm bg-accent text-ink-inverse">
+                <Sparkles className="size-4" aria-hidden="true" />
+              </span>
+              <span className="text-h3">{brand.name || 'Lumen'}</span>
+            </>
+          )}
         </Link>
 
         <ul className="ml-2 hidden items-center gap-1 md:flex">

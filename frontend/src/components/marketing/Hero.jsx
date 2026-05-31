@@ -1,19 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Truck, RotateCcw, ShieldCheck, Flame } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Flame } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/Button.jsx';
 import { cn } from '@/lib/utils.js';
 import { duration, ease } from '@/lib/motion.js';
 import { useHeroSlides } from '@/features/hero-slides/hooks.js';
 import { useBestsellers } from '@/features/products/hooks.js';
+import { DEFAULT_PERKS, resolvePerkIcon } from '@/features/hero-slides/perks.js';
 import { SaleCountdown, useSaleTarget } from './SaleCountdown.jsx';
-
-const PERKS = [
-  { icon: Truck, label: 'Free Delivery' },
-  { icon: RotateCcw, label: '7-Day Returns' },
-  { icon: ShieldCheck, label: 'Secure Checkout' },
-];
 
 const INTERVAL_MS = 5000;
 
@@ -29,6 +24,23 @@ function SaleSlide({ slide, fallbackImage }) {
     'A premium store built for speed and delight. Curated essentials, fair prices, and a checkout that just works.';
   const ctaLabel = slide.cta_label ?? 'Shop the collection';
   const ctaHref = slide.cta_href ?? '/products';
+
+  // Convention for these fields: null/undefined → built-in default;
+  // explicit empty string / empty array → hidden.
+  const eyebrow = slide.eyebrow == null ? 'Mega season sale is live' : slide.eyebrow;
+
+  const cta2Label = slide.cta2_label == null ? 'Browse new arrivals' : slide.cta2_label;
+  const cta2Href = slide.cta2_href || '/products?sort=newest';
+
+  const perks = slide.perks == null ? DEFAULT_PERKS : slide.perks;
+
+  const countdownLabel =
+    slide.countdown_label == null
+      ? slide._isFallback
+        ? 'Mega season sale ends in'
+        : 'Sale ends in'
+      : slide.countdown_label;
+
   const image = slide.image_url || fallbackImage;
   const [imgFailed, setImgFailed] = useState(false);
   const showImage = image && !imgFailed;
@@ -67,13 +79,15 @@ function SaleSlide({ slide, fallbackImage }) {
         animate="show"
         className="flex flex-col items-start"
       >
-        <motion.span
-          variants={item}
-          className="inline-flex items-center gap-2 rounded-full border border-line-subtle bg-fill px-4 py-1.5 text-xs font-medium text-ink-secondary"
-        >
-          <Flame className="size-3.5 text-accent" aria-hidden="true" />
-          Mega season sale is live
-        </motion.span>
+        {eyebrow && (
+          <motion.span
+            variants={item}
+            className="inline-flex items-center gap-2 rounded-full border border-line-subtle bg-fill px-4 py-1.5 text-xs font-medium text-ink-secondary"
+          >
+            <Flame className="size-3.5 text-accent" aria-hidden="true" />
+            {eyebrow}
+          </motion.span>
+        )}
 
         <motion.h1
           variants={item}
@@ -103,25 +117,35 @@ function SaleSlide({ slide, fallbackImage }) {
             {ctaLabel}
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
-          <Link
-            to="/products?sort=newest"
-            className={cn(
-              buttonVariants({ variant: 'secondary', size: 'lg' }),
-              'w-full rounded-full sm:w-auto',
-            )}
-          >
-            Browse new arrivals
-          </Link>
+          {cta2Label && (
+            <Link
+              to={cta2Href}
+              className={cn(
+                buttonVariants({ variant: 'secondary', size: 'lg' }),
+                'w-full rounded-full sm:w-auto',
+              )}
+            >
+              {cta2Label}
+            </Link>
+          )}
         </motion.div>
 
-        <motion.ul variants={item} className="mt-8 flex flex-wrap gap-x-6 gap-y-2">
-          {PERKS.map(({ icon: Icon, label }) => (
-            <li key={label} className="inline-flex items-center gap-2 text-sm text-ink-secondary">
-              <Icon className="size-4 text-accent" aria-hidden="true" />
-              {label}
-            </li>
-          ))}
-        </motion.ul>
+        {perks.length > 0 && (
+          <motion.ul variants={item} className="mt-8 flex flex-wrap gap-x-6 gap-y-2">
+            {perks.map(({ icon, label }, i) => {
+              const Icon = resolvePerkIcon(icon);
+              return (
+                <li
+                  key={`${label}-${i}`}
+                  className="inline-flex items-center gap-2 text-sm text-ink-secondary"
+                >
+                  <Icon className="size-4 text-accent" aria-hidden="true" />
+                  {label}
+                </li>
+              );
+            })}
+          </motion.ul>
+        )}
       </motion.div>
 
       {/* Right — product showcase */}
@@ -189,9 +213,11 @@ function SaleSlide({ slide, fallbackImage }) {
         {/* Countdown */}
         {effectiveCountdown && (
           <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
-            <span className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary">
-              {slide._isFallback ? 'Mega season sale ends in' : 'Sale ends in'}
-            </span>
+            {countdownLabel && (
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary">
+                {countdownLabel}
+              </span>
+            )}
             <SaleCountdown target={effectiveCountdown} />
           </div>
         )}

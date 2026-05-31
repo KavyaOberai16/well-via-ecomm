@@ -7,10 +7,17 @@ export const heroSlidesApi = {
   listAll: () =>
     apiClient.get('/hero-slides/all').then((r) => r.data),
 
-  create: ({ file, alt }) => {
+  // Create a slide with its image plus any content fields in one request.
+  // `fields` may carry alt, kind, eyebrow, heading, subtext, badge_text,
+  // cta_label/href, cta2_label/href, countdown_end, countdown_label, text_theme
+  // and `perks` (an array, sent JSON-encoded).
+  create: ({ file, ...fields }) => {
     const form = new FormData();
     form.append('file', file);
-    if (alt) form.append('alt', alt);
+    for (const [key, value] of Object.entries(fields)) {
+      if (value === undefined || value === null || value === '') continue;
+      form.append(key, key === 'perks' ? JSON.stringify(value) : value);
+    }
     return apiClient
       .post('/hero-slides', form, { timeout: 60000 })
       .then((r) => r.data);

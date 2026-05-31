@@ -43,12 +43,22 @@ export default function Footer() {
               to="/"
               className="inline-flex items-center gap-3 rounded-sm focus-visible:focus-ring"
             >
-              <Icon3D reduce={reduce} className="size-11" gradient="from-[#7C7FF5] to-[#B794F4]">
-                <Sparkles className="size-5" aria-hidden="true" />
-              </Icon3D>
-              <span className="text-2xl font-semibold tracking-tight">
-                {cfg.brand?.name || 'Lumen'}
-              </span>
+              {cfg.brand?.logo_url ? (
+                <img
+                  src={cfg.brand.logo_url}
+                  alt={cfg.brand?.name || 'Lumen'}
+                  className="h-11 w-auto max-w-[200px] object-contain"
+                />
+              ) : (
+                <>
+                  <Icon3D reduce={reduce} className="size-11" gradient="from-[#7C7FF5] to-[#B794F4]">
+                    <Sparkles className="size-5" aria-hidden="true" />
+                  </Icon3D>
+                  <span className="text-2xl font-semibold tracking-tight">
+                    {cfg.brand?.name || 'Lumen'}
+                  </span>
+                </>
+              )}
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/55">
               {cfg.brand?.tagline}

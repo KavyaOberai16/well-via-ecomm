@@ -26,6 +26,9 @@ class Brand(BaseModel):
 
     name: str
     tagline: str
+    # Optional uploaded logo. When set, the storefront renders this image in
+    # place of the icon + wordmark in both the navbar and footer.
+    logo_url: str = ""
 
 
 class Newsletter(BaseModel):
@@ -116,6 +119,7 @@ DEFAULT_FOOTER: dict = {
             "Modern essentials, thoughtfully sourced. "
             "Join our newsletter for early drops and member-only pricing."
         ),
+        "logo_url": "",
     },
     "newsletter": {
         "enabled": True,
@@ -214,6 +218,12 @@ class FooterConfigRead(BaseModel):
     bottom_links: list[BottomLink]
     payment_methods: list[str]
     copyright: str
+
+
+class LogoUploadResponse(BaseModel):
+    """Returned by POST /footer/logo after a successful upload."""
+
+    url: str
 
 
 class FooterConfigUpdate(BaseModel):

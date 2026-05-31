@@ -21,6 +21,7 @@ from app.api.v1.endpoints import (
     roles,
     settings,
     shipping,
+    site_pages,
     taxes,
     users,
     wishlist,
@@ -57,3 +58,4 @@ api_router.include_router(returns.admin_router, prefix="/returns/admin", tags=["
 api_router.include_router(returns.customer_router, prefix="/returns", tags=["returns"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(footer.router, prefix="/footer", tags=["footer"])
+api_router.include_router(site_pages.router, prefix="/site-pages", tags=["site-pages"])

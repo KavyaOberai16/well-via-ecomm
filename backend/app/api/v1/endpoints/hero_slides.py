@@ -1,8 +1,17 @@
+import json
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Form, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin
-from app.schemas.hero_slide import HeroSlideRead, HeroSlideReorder, HeroSlideUpdate
+from app.core.exceptions import ValidationError
+from app.schemas.hero_slide import (
+    HeroSlideRead,
+    HeroSlideReorder,
+    HeroSlideUpdate,
+    Perk,
+)
 from app.services.hero_slide_service import HeroSlideService
 
 router = APIRouter()
@@ -27,14 +36,57 @@ def list_all_hero_slides(db: Session = Depends(get_db)):
 async def create_hero_slide(
     file: UploadFile,
     alt: str | None = Form(default=None),
+    kind: str | None = Form(default=None),
+    eyebrow: str | None = Form(default=None),
+    heading: str | None = Form(default=None),
+    subtext: str | None = Form(default=None),
+    badge_text: str | None = Form(default=None),
+    cta_label: str | None = Form(default=None),
+    cta_href: str | None = Form(default=None),
+    cta2_label: str | None = Form(default=None),
+    cta2_href: str | None = Form(default=None),
+    countdown_end: datetime | None = Form(default=None),
+    countdown_label: str | None = Form(default=None),
+    perks: str | None = Form(default=None),  # JSON-encoded list[{icon,label}]
+    text_theme: str | None = Form(default=None),
     db: Session = Depends(get_db),
 ):
+    """Create a hero slide with its image and (optionally) its full content in
+    a single multipart request. Only `file` is required."""
     file_bytes = await file.read()
+
+    # Collect the optional content columns; omit any that weren't supplied so
+    # they fall back to model/server defaults.
+    raw = {
+        "alt": alt,
+        "kind": kind,
+        "eyebrow": eyebrow,
+        "heading": heading,
+        "subtext": subtext,
+        "badge_text": badge_text,
+        "cta_label": cta_label,
+        "cta_href": cta_href,
+        "cta2_label": cta2_label,
+        "cta2_href": cta2_href,
+        "countdown_end": countdown_end,
+        "countdown_label": countdown_label,
+        "text_theme": text_theme,
+    }
+    fields = {k: v for k, v in raw.items() if v is not None}
+
+    if perks is not None:
+        try:
+            parsed = json.loads(perks) if perks.strip() else []
+        except json.JSONDecodeError as exc:
+            raise ValidationError("Invalid perks JSON") from exc
+        # Validate each entry against the Perk schema, store as plain dicts.
+        fields["perks"] = [Perk(**p).model_dump() for p in parsed]
+
     return HeroSlideService(db).create(
         file_bytes=file_bytes,
         filename=file.filename or "image",
         content_type=file.content_type or "",
-        alt=alt,
+        fields=fields,
     )
 
 

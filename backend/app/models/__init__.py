@@ -22,6 +22,7 @@ from app.models.return_request import (
     ReturnStatus,
 )
 from app.models.review import Review
+from app.models.site_pages import SitePages
 from app.models.system_setting import SystemSetting
 from app.models.tax import Tax, product_taxes
 from app.models.user import User
@@ -55,6 +56,7 @@ __all__ = [
     "ReturnStatus",
     "Review",
     "Role",
+    "SitePages",
     "SystemSetting",
     "Tax",
     "User",

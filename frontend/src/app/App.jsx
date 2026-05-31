@@ -26,6 +26,14 @@ const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage.jsx'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallbackPage.jsx'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage.jsx'));
 
+// Company / content pages (footer "About" links) — admin-editable.
+const AboutPage = lazy(() => import('@/pages/AboutPage.jsx'));
+const ContactPage = lazy(() => import('@/pages/ContactPage.jsx'));
+const CareersPage = lazy(() => import('@/pages/CareersPage.jsx'));
+const StoriesPage = lazy(() => import('@/pages/StoriesPage.jsx'));
+const PressPage = lazy(() => import('@/pages/PressPage.jsx'));
+const CorporatePage = lazy(() => import('@/pages/CorporatePage.jsx'));
+
 const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage.jsx'));
 const AdminProductsPage = lazy(() => import('@/pages/admin/AdminProductsPage.jsx'));
 const AdminProductFormPage = lazy(() => import('@/pages/admin/AdminProductFormPage.jsx'));
@@ -41,6 +49,7 @@ const AdminAuditPage = lazy(() => import('@/pages/admin/AdminAuditPage.jsx'));
 const AdminSettingsPage = lazy(() => import('@/pages/admin/AdminSettingsPage.jsx'));
 const AdminPaymentGatewayPage = lazy(() => import('@/pages/admin/AdminPaymentGatewayPage.jsx'));
 const AdminFooterPage = lazy(() => import('@/pages/admin/AdminFooterPage.jsx'));
+const AdminPagesPage = lazy(() => import('@/pages/admin/AdminPagesPage.jsx'));
 const AdminOrdersPage = lazy(() => import('@/pages/admin/AdminOrdersPage.jsx'));
 const AdminOrderDetailPage = lazy(() => import('@/pages/admin/AdminOrderDetailPage.jsx'));
 const AdminReturnsPage = lazy(() => import('@/pages/admin/AdminReturnsPage.jsx'));
@@ -68,6 +77,13 @@ export default function App() {
             <Route path="login" element={<LoginPage />} />
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
             <Route path="auth/callback" element={<AuthCallbackPage />} />
+            {/* Company / content pages — match the footer link targets */}
+            <Route path="about" element={<AboutPage />} />
+            <Route path="contact" element={<ContactPage />} />
+            <Route path="careers" element={<CareersPage />} />
+            <Route path="stories" element={<StoriesPage />} />
+            <Route path="press" element={<PressPage />} />
+            <Route path="corporate" element={<CorporatePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
 
@@ -186,6 +202,14 @@ export default function App() {
               element={
                 <RequirePermission permission="frontend.manage">
                   <AdminFooterPage />
+                </RequirePermission>
+              }
+            />
+            <Route
+              path="admin/pages"
+              element={
+                <RequirePermission permission="frontend.manage">
+                  <AdminPagesPage />
                 </RequirePermission>
               }
             />

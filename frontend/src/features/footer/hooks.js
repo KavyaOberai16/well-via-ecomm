@@ -24,3 +24,9 @@ export function useUpdateFooterConfig() {
     },
   });
 }
+
+export function useUploadFooterLogo() {
+  return useMutation({
+    mutationFn: (file) => footerApi.uploadLogo(file),
+  });
+}

@@ -9,8 +9,16 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
+from app.core.exceptions import ValidationError
 from app.repositories.footer_repository import FooterRepository
 from app.schemas.footer import DEFAULT_FOOTER, FooterConfigUpdate
+from app.storage import get_storage
+from app.storage.base import CONTENT_TYPE_EXT
+
+# Logos may additionally be uploaded as SVG (vector marks are common for
+# logos), on top of the raster types shared with product/hero uploads.
+_LOGO_CONTENT_TYPES = {**CONTENT_TYPE_EXT, "image/svg+xml": ".svg"}
 
 
 class FooterService:
@@ -38,3 +46,19 @@ class FooterService:
         self.repo.upsert(data)
         self.db.commit()
         return data
+
+    def upload_logo(self, *, file_bytes: bytes, filename: str, content_type: str) -> str:
+        """Persist an uploaded brand logo and return its public URL.
+
+        The URL is not written to the footer document here — the admin UI sets
+        it on `brand.logo_url` and saves via the normal PUT, mirroring how hero
+        slides and category images are handled.
+        """
+        if (content_type or "").lower() not in _LOGO_CONTENT_TYPES:
+            raise ValidationError(f"Unsupported image type: {content_type or 'unknown'}")
+        max_bytes = settings.MAX_IMAGE_SIZE_MB * 1024 * 1024
+        if len(file_bytes) > max_bytes:
+            raise ValidationError(f"Logo must be under {settings.MAX_IMAGE_SIZE_MB} MB")
+        return get_storage().save(
+            data=file_bytes, filename=filename, content_type=content_type
+        )

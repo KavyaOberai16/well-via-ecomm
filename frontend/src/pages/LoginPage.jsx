@@ -336,7 +336,7 @@ export default function LoginPage() {
                 <span className="h-px flex-1 bg-line-subtle" />
               </div>
               <a
-                href={`${env.backendUrl}/api/v1/auth/google/login`}
+                href={`${env.apiBaseUrl}/auth/google/login`}
                 className={cn(buttonVariants({ variant: 'secondary', size: 'lg', block: true }))}
               >
                 <GoogleIcon />

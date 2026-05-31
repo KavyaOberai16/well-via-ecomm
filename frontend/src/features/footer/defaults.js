@@ -124,6 +124,9 @@ export const FOOTER_DEFAULTS = {
     name: 'Lumen',
     tagline:
       'Modern essentials, thoughtfully sourced. Join our newsletter for early drops and member-only pricing.',
+    // When set, the storefront shows this uploaded logo image in place of the
+    // icon + wordmark in both the navbar and footer.
+    logo_url: '',
   },
 
   newsletter: {
