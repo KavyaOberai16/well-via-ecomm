@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /*
+   * Theme tokens. Dark is the default (:root / .dark). The `.light` class on
+   * <html> remaps the same token names — components never change.
+   * Solid colors are RGB triplets (Tailwind composes the alpha);
+   * alpha-based surfaces are stored as full color values.
+   */
+  :root,
+  .dark {
+    color-scheme: dark;
+
+    --bg-base: 11 11 15;
+    --bg-elevated: 20 20 27;
+    --bg-sunken: 7 7 9;
+
+    --ink-primary: 245 245 247;
+    --ink-secondary: 161 161 170;
+    --ink-tertiary: 107 107 118;
+    --ink-inverse: 11 11 15;
+
+    --line-subtle: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.16);
+    --fill: rgba(255, 255, 255, 0.05);
+    --fill-strong: rgba(255, 255, 255, 0.09);
+    --glass: rgba(20, 20, 27, 0.55);
+    --glass-fallback: rgb(20 20 27);
+    --glass-highlight: rgba(255, 255, 255, 0.06);
+    --grid-line: rgba(255, 255, 255, 0.025);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
+  }
+
+  .light {
+    color-scheme: light;
+
+    --bg-base: 249 250 252;
+    --bg-elevated: 255 255 255;
+    --bg-sunken: 241 242 245;
+
+    --ink-primary: 17 17 21;
+    --ink-secondary: 88 90 100;
+    --ink-tertiary: 138 140 150;
+    /* Text on the accent fill — kept dark in both themes: black on #6366F1
+       scores 4.70:1 (AA pass), white only 4.47:1 (fail). */
+    --ink-inverse: 11 11 15;
+
+    --line-subtle: rgba(17, 17, 26, 0.08);
+    --line-strong: rgba(17, 17, 26, 0.16);
+    --fill: rgba(17, 17, 26, 0.04);
+    --fill-strong: rgba(17, 17, 26, 0.07);
+    --glass: rgba(255, 255, 255, 0.7);
+    --glass-fallback: rgb(255 255 255);
+    --glass-highlight: rgba(255, 255, 255, 0.9);
+    --grid-line: rgba(17, 17, 26, 0.04);
+
+    --shadow-sm: 0 1px 2px rgba(17, 17, 26, 0.06);
+    --shadow-md: 0 10px 30px rgba(17, 17, 26, 0.1);
+    --shadow-lg: 0 24px 60px rgba(17, 17, 26, 0.14);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    background-color: rgb(var(--bg-base));
+  }
+
+  body {
+    @apply bg-bg-base font-sans text-base text-ink-primary antialiased;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition: background-color 0.2s ease;
+  }
+
+  ::selection {
+    background: rgba(99, 102, 241, 0.35);
+    color: rgb(var(--ink-primary));
+  }
+
+  /* Custom scrollbar — subtle, premium */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--fill-strong);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--line-strong);
+    background-clip: padding-box;
+  }
+}
+
+@layer components {
+  /* Glassmorphism surface — translucent fill + blur + hairline + inner highlight */
+  .glass {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+    @apply border border-line-subtle;
+    box-shadow:
+      var(--shadow-md),
+      inset 0 1px 0 var(--glass-highlight);
+  }
+
+  /* Opaque fallback when backdrop-filter is unsupported */
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .glass {
+      background: var(--glass-fallback);
+    }
+  }
+}
+
+@layer utilities {
+  /* Standard accessible focus ring — used on all interactive elements */
+  .focus-ring {
+    @apply outline-none ring-2 ring-accent/70 ring-offset-2 ring-offset-bg-base;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Respect reduced-transparency: drop glass blur for an opaque surface */
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--glass-fallback);
+  }
+}
+
+/* Honor reduced-motion globally — disable parallax, tilt, large transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
