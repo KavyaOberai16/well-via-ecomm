@@ -15,6 +15,13 @@ import { useAddToCart } from '@/features/cart/hooks.js';
 import { cn } from '@/lib/utils.js';
 import { fadeUp } from '@/lib/motion.js';
 import NewLaunchesSection from '@/components/marketing/NewLaunchesSection.jsx';
+import Products from '@/components/marketing/Products.jsx'
+import ComboSection from '../components/marketing/Combosection';
+import NourishSection from '../components/marketing/NourishSection';
+import ReviewSection from '../components/marketing/ReviewSection';
+import WellnessCombo from '../components/marketing/WellnessCombo';
+import FinalWelness from '../components/marketing/FinalWellness';
+import FinalWellness from '../components/marketing/FinalWellness';
 
 export default function HomePage() {
   const { data, isLoading } = useProducts({ page: 1, page_size: 8 });
@@ -31,14 +38,26 @@ export default function HomePage() {
       {/* the new launches section */}
       <NewLaunchesSection/>
 
-      {/* B) Curated for You — category circles */}
+      <Products/>
+
+      <ComboSection/>
+
+      <NourishSection/>
+
+      <ReviewSection/>
+
+      <WellnessCombo/>
+
+      <FinalWellness/>
+
+      {/* B) Curated for You — category circles
       <CategoryCircles />
 
       {/* D) Bestsellers */}
-      <BestsellersSection />
+      {/* <BestsellersSection /> */}
 
       {/* E) Featured grid */}
-      <section className="mx-auto mt-16 max-w-content px-4 sm:px-6">
+      {/* <section className="mx-auto mt-16 max-w-content px-4 sm:px-6">
         <motion.header
           className="flex items-end justify-between gap-4"
           variants={fadeUp}
@@ -80,11 +99,11 @@ export default function HomePage() {
               onQuickAdd={(p) => addToCart.mutate({ productId: p.id })}
             />
           )}
-        </div>
-      </section>
+        </div> */} 
+      {/* </section> */}
 
       {/* F) Join the community */}
-      <CommunityBand />
+      {/* <CommunityBand /> */}
     </Page>
   );
 }

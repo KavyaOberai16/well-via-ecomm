@@ -18,9 +18,9 @@ export default function DealsBanner() {
           bg-[#133F30]
           text-white
           px-4
-          h-14 sm:h-16
+          h-10
           w-full
-          overflow-hidden
+          overflow-visible
         "
       >
         {/* CENTER LOGO */}
@@ -29,10 +29,10 @@ export default function DealsBanner() {
             src="/juice.png"
             alt="juice logo"
             className="
-              h-48 sm:h-52 md:h-56
+              h-56
               w-auto
-              scale-148
               object-contain
+              -translate-y-8
             "
           />
         </div>
@@ -45,8 +45,9 @@ export default function DealsBanner() {
           text-xs sm:text-sm 
           font-medium 
           whitespace-nowrap
+          amita-font
         ">
-          More Coming Soon!
+          more coming soon!
         </div>
       </motion.div>
     </section>

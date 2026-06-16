@@ -15,6 +15,102 @@ const bottomImage = "/meditation.png";
 
 const INTERVAL_MS = 5000;
 
+
+ function WellnessImg() {
+
+ const [rotation, setRotation] = useState(0);
+ const images = [
+  { src: topImage},
+  { src: middleImage},
+  { src: bottomImage },
+];
+const positions = [
+  { x: 120, y: 0, scale: 0.85 },     
+  { x: 0, y: 100, scale: 1.3 },     
+  { x: 120, y: 200, scale: 0.85 },   
+];
+
+
+useEffect(() => {
+  const timer = setInterval(() => {
+    setRotation((prev) => prev - 120);
+  }, 3000);
+
+  return () => clearInterval(timer);
+}, []);
+
+  return (
+    <section className="mx-auto max-w-content px-4 py-8">
+      <div className="grid grid-cols-2 items-center gap-4">
+
+        {/* LEFT SIDE */}
+        <div>
+          <h1 className="text-2xl font-bold amita-font">
+            Bites of Daily Wellness
+          </h1>
+
+          <h2 className="mt-3 text-lg font-semibold alata-font">
+            Fuel your hustle
+          </h2>
+
+          <p className="mt-3 text-sm alata-font">
+            Clean, functional nutrients shaped to fit
+            seamlessly into your active morning ritual.
+          </p>
+
+          <button
+            className="mt-4 rounded-full bg-[#133F30] px-5 py-2 text-sm text-white alata-font"
+          >
+            Shop Now!
+          </button>
+        </div>
+
+        {/* RIGHT SIDE */}
+            <div className="relative w-72 h-80">
+  {images.map((img, index) => {
+    
+   const currentIndex =
+  ((((rotation / 120) % 3) + index) % 3 + 3) % 3;
+
+//const nextIndex = (currentIndex + 1) % 3;
+
+const current = positions[currentIndex];
+//const next = positions[nextIndex];
+
+// const curvePoints = [
+//   { x: 70, y: 40 },
+//   { x: 70, y: 170 },
+//   { x: 170, y: 100 },
+// ];
+
+// const curve = curvePoints[currentIndex];
+
+    return (
+      <motion.img
+        key={index}
+        src={img.src}
+        alt=""
+       animate={{
+  x: current.x,
+  y: current.y,
+  scale: current.scale,
+}}
+transition={{
+  duration: 0.8,
+  ease: "easeInOut",
+}}
+        style={{
+  zIndex: current.scale>1 ? 10 : 1,
+}}
+        className="absolute w-28 h-24 rounded-3xl object-cover shadow-lg"
+      />
+    );
+  })}
+</div>
+      </div>
+    </section>
+  );
+}
 // --- Slide renderers ---
 
 // function SaleSlide({ slide, fallbackImage }) {
@@ -72,78 +168,6 @@ const INTERVAL_MS = 5000;
 //       transition: { duration: duration.slow, ease: ease.entrance },
 //     },
 //   };
-
- function WellnessImg(){
-   const [images, setImages] = useState([
-  topImage,
-  middleImage,
-  bottomImage,
-]);
-
-// useEffect(() => {
-//   const interval = setInterval(() => {
-//     setImages(([first, second, third]) => [
-//       second,
-//       third,
-//       first,
-//     ]);
-//   }, 3000);
-
-//   return () => clearInterval(interval);
-// }, []);
-
-return (
-  <section className="mx-auto max-w-content px-4 py-8">
-    <div className="grid grid-cols-2 items-center gap-4">
-
-      {/* LEFT SIDE */}
-      <div>
-        <h1 className="text-2xl font-bold">
-          Bites of Daily Wellness
-        </h1>
-
-        <h2 className="mt-3 text-lg font-semibold">
-          Fuel your hustle
-        </h2>
-
-        <p className="mt-3 text-sm">
-          Clean, functional nutrients shaped to fit seamlessly
-          into your active morning ritual.
-        </p>
-
-        <button className="mt-4 rounded-full bg-[#133F30] px-5 py-2 text-sm text-white">
-          Shop Now!
-        </button>
-      </div>
-
-      {/* RIGHT SIDE */}
-      <div className="flex flex-col gap-3">
-
-        <img
-          src={images[0]}
-          alt="sleep"
-          className="w-28 self-end rounded-3xl"
-        />
-
-        <img
-          src={images[1]}
-          alt="laptop"
-          className="w-28 self-center rounded-3xl"
-        />
-
-        <img
-          src={images[2]}
-          alt="window"
-          className="w-28 self-end rounded-3xl"
-        />
-
-      </div>
-
-    </div>
-  </section>
-);
-};
-
 
 function PhotoSlide({ slide }) {
   const isLight = (slide.text_theme ?? 'light') === 'light';

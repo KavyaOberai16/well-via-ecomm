@@ -10,177 +10,162 @@ import { EmptyState } from '@/components/feedback/EmptyState.jsx';
 import { useProducts } from '@/features/products/hooks.js';
 import { useCategories } from '@/features/categories/hooks.js';
 import { useAddToCart } from '@/features/cart/hooks.js';
+import { ChevronDown } from "lucide-react";
+import { Star } from 'lucide-react';
 
 const PAGE_SIZE = 12;
 
 export default function ProductListPage() {
-  const [searchParams] = useSearchParams();
-  // The catalog can be filtered by category via either URL shape:
-  //   ?category_id=<id>   (used by product-detail "Visit the X store" links)
-  //   ?category=<slug>    (used by the homepage category circles)
-  const categoryIdParam = searchParams.get('category_id');
-  const categorySlug = searchParams.get('category');
+  // const [searchParams] = useSearchParams();
+  // // The catalog can be filtered by category via either URL shape:
+  // //   ?category_id=<id>   (used by product-detail "Visit the X store" links)
+  // //   ?category=<slug>    (used by the homepage category circles)
+  // const categoryIdParam = searchParams.get('category_id');
+  // const categorySlug = searchParams.get('category');
 
-  const { data: categories = [] } = useCategories();
+  // const { data: categories = [] } = useCategories();
 
-  const activeCategory = useMemo(() => {
-    if (categoryIdParam) {
-      const id = Number(categoryIdParam);
-      return categories.find((c) => c.id === id) || (Number.isFinite(id) ? { id, name: null } : null);
-    }
-    if (categorySlug) {
-      return categories.find((c) => c.slug === categorySlug) || null;
-    }
-    return null;
-  }, [categoryIdParam, categorySlug, categories]);
+  // const activeCategory = useMemo(() => {
+  //   if (categoryIdParam) {
+  //     const id = Number(categoryIdParam);
+  //     return categories.find((c) => c.id === id) || (Number.isFinite(id) ? { id, name: null } : null);
+  //   }
+  //   if (categorySlug) {
+  //     return categories.find((c) => c.slug === categorySlug) || null;
+  //   }
+  //   return null;
+  // }, [categoryIdParam, categorySlug, categories]);
 
-  const categoryId = activeCategory?.id;
+  // const categoryId = activeCategory?.id;
 
-  const [search, setSearch] = useState('');
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
+  // const [search, setSearch] = useState('');
+  // const [query, setQuery] = useState('');
+  // const [page, setPage] = useState(1);
 
-  // Debounce the search input so we do not refetch on every keystroke.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setQuery(search.trim());
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [search]);
+  // // Debounce the search input so we do not refetch on every keystroke.
+  // useEffect(() => {
+  //   const t = setTimeout(() => {
+  //     setQuery(search.trim());
+  //     setPage(1);
+  //   }, 300);
+  //   return () => clearTimeout(t);
+  // }, [search]);
 
-  // Reset to the first page whenever the active category changes.
-  useEffect(() => {
-    setPage(1);
-  }, [categoryId, categorySlug]);
+  // // Reset to the first page whenever the active category changes.
+  // useEffect(() => {
+  //   setPage(1);
+  // }, [categoryId, categorySlug]);
 
-  const { data, isLoading, isError, refetch } = useProducts({
-    q: query || undefined,
-    category_id: categoryId,
-    page,
-    page_size: PAGE_SIZE,
-  });
-  const addToCart = useAddToCart();
+  // const { data, isLoading, isError, refetch } = useProducts({
+  //   q: query || undefined,
+  //   category_id: categoryId,
+  //   page,
+  //   page_size: PAGE_SIZE,
+  // });
+  // const addToCart = useAddToCart();
 
-  const products = data?.items ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  // const products = data?.items ?? [];
+  // const total = data?.total ?? 0;
+  // const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const isFiltered = !!(categoryIdParam || categorySlug);
-  const heading = activeCategory?.name || (isFiltered ? 'Category' : 'Shop');
+  // const isFiltered = !!(categoryIdParam || categorySlug);
+  // const heading = activeCategory?.name || (isFiltered ? 'Category' : 'Shop');
+
+
+  const productsList = [
+  { id: 1, name: "Ashwa-Ease Gummies", price: "₹349", img:'/p1.png' },
+  { id: 2, name: "Sleep Gummies", price: "₹349", img:'/p2.png' },
+  { id: 3, name: "Her-Wellness Gummies", price: "₹349", img:'/p3.png' },
+  { id: 4, name: "Immunity Gummies", price: "₹349", img:'/p4.png' },
+  { id: 5, name: "Multi-Vitamin Gummies", price: "₹349", img:'/p5.png' },
+  { id: 6, name: "Beauty Boost Gummies", price: "₹349", img:'/p6.png' },
+  { id: 7, name: "Meta-Gut Gummies", price: "₹349", img:'/p7.png' },
+  {id: 8, name:"Core Omega Gummies ", price: "₹349", img: '/p8.png'}
+];
 
   return (
-    <Page>
-      <Breadcrumbs
-        items={isFiltered ? [{ label: 'Shop', to: '/products' }] : []}
-        current={heading}
-        className="mb-6"
-      />
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-h1 text-ink-primary">{heading}</h1>
-            {isFiltered && (
-              <Link
-                to="/products"
-                className="inline-flex items-center gap-1.5 rounded-full border border-line-subtle bg-fill px-3 py-1 text-xs font-medium text-ink-secondary transition-colors hover:text-ink-primary focus-visible:focus-ring"
-              >
-                <X className="size-3.5" aria-hidden="true" />
-                Clear filter
-              </Link>
-            )}
+    <div className="">
+    <div className="bg-[#133F30] h-5"></div>
+    <div className="relative pt-0">
+       <img
+    src='/allProducts.png'
+    alt=''
+    className='w-full rounded'
+    />
+    <div className="absolute top-3 left-2">
+  <h1 className="text-xs alata-font text-[#133F30]">
+    Wellness, your way
+  </h1>
+
+  <p className="mt-1 text-[8px] leading-tight w-24">
+    From better sleep to daily immunity, discover gummies crafted for every goal
+  </p>
+
+  <button className="mt-1 rounded-full bg-[#133F30] px-2 py-1 text-[8px] text-white">
+    Shop All Products
+  </button>
+</div>
+    </div>
+
+    <div className="grid grid-cols-[1fr_3fr_1fr] items-center gap-2 mt-5">
+      <div className="flex items-center justify-between border px-3 py-2 max-w-fit">
+  <span>Filter</span>
+  <ChevronDown size={16} />
+</div>
+
+     <div className="relative border px-2 py-2">
+  <Search
+    size={14}
+    className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+  />
+
+  <input
+    placeholder="Search for products"
+    className="w-full pl-8 outline-none"
+  />
+</div>
+
+<div className="flex items-center border px-2 py-2 max-w-fit">
+
+  <div className="flex gap-1 pr-2">
+    <div className="w-1 h-5 bg-gray-400 rounded"></div>
+    <div className="w-1 h-5 bg-gray-400 rounded"></div>
+  </div>
+
+{/* line between 2 */}
+  <div className="w-px h-6 bg-gray-300 mx-2"></div>
+
+  <div className="flex flex-col gap-1">
+    <div className="w-4 h-1 bg-gray-400 rounded"></div>
+    <div className="w-4 h-1 bg-gray-400 rounded"></div>
+  </div>
+
+</div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-4 mt-4">
+      {productsList.map((product)=>(
+        <div key={product.id} className='border p-2'>
+          <img src= {product.img}
+          alt=''
+          className='w-full'
+          />
+          <div className="flex mt-2">
+            <Star size={12} fill="currentColor" className="text-yellow-400"/>
+            <Star size={12} fill="currentColor" className="text-yellow-400"/>
+            <Star size={12} fill="currentColor" className="text-yellow-400"/>
+            <Star size={12} fill="currentColor" className="text-yellow-400"/>
+            <Star size={12} fill="currentColor" className="text-yellow-400"/>
           </div>
-          <p className="mt-1 text-sm text-ink-secondary">
-            {isLoading
-              ? 'Loading the collection…'
-              : `${total} product${total === 1 ? '' : 's'}${
-                  activeCategory?.name ? ` in ${activeCategory.name}` : ''
-                }`}
-          </p>
+          <p>{product.name}</p>
+          <p>{product.price}</p>
         </div>
-        <div className="w-full sm:w-72">
-          <Input
-            type="search"
-            label="Search"
-            icon={Search}
-            placeholder="Search products…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </header>
+      ))}
+    </div>
 
-      <div className="mt-6">
-        {isError ? (
-          <EmptyState
-            icon={AlertTriangle}
-            title="We couldn't load products"
-            description="Something went wrong on our end. Please try again."
-            action={
-              <Button size="sm" onClick={() => refetch()}>
-                Retry
-              </Button>
-            }
-          />
-        ) : !isLoading && products.length === 0 ? (
-          <EmptyState
-            icon={PackageX}
-            title="No products found"
-            description={
-              query
-                ? `Nothing matched "${query}". Try a different search.`
-                : activeCategory?.name
-                  ? `No products in ${activeCategory.name} yet. Check back shortly.`
-                  : 'The catalog is being stocked. Check back shortly.'
-            }
-            action={
-              isFiltered ? (
-                <Link to="/products">
-                  <Button size="sm" variant="secondary">
-                    View all products
-                  </Button>
-                </Link>
-              ) : undefined
-            }
-          />
-        ) : (
-          <ProductGrid
-            products={products}
-            loading={isLoading}
-            skeletonCount={PAGE_SIZE}
-            onQuickAdd={(p) => addToCart.mutate({ productId: p.id })}
-          />
-        )}
-      </div>
 
-      {!isLoading && !isError && totalPages > 1 && (
-        <nav
-          className="mt-10 flex items-center justify-center gap-3"
-          aria-label="Pagination"
-        >
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            <ChevronLeft className="size-4" aria-hidden="true" />
-            Previous
-          </Button>
-          <span className="text-sm text-ink-secondary">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          >
-            Next
-            <ChevronRight className="size-4" aria-hidden="true" />
-          </Button>
-        </nav>
-      )}
-    </Page>
+    </div>
+    
+    
   );
 }

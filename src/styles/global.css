@@ -1,6 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Inclusive+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amita:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alata&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Slab:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gabriela&display=swap');
 
 @layer base {
   /*
@@ -36,6 +41,21 @@
     --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
   }
 
+  .inclusive-sans {
+  font-family: 'Inclusive Sans', sans-serif;
+}
+.amita-font {
+  font-family: 'Amita', cursive;
+}
+.alata-font {
+  font-family: 'Alata', sans-serif;
+}
+.josefin-slab-font {
+  font-family: 'Josefin Slab', serif;
+}
+.gabriela-font {
+  font-family: 'Gabriela', serif;
+}
   .light {
     color-scheme: light;
 

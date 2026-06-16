@@ -8,6 +8,10 @@ import RequirePermission from './RequirePermission.jsx';
 import ScrollToTop from './ScrollToTop.jsx';
 import AuthBootstrap from './AuthBootstrap.jsx';
 import { PageFallback } from '@/components/feedback/PageFallback.jsx';
+import Bestsellers from '../pages/Bestsellers.jsx';
+import NewArrivals from '../pages/NewArrivals.jsx';
+import Emptycart from '../pages/Emptycart.jsx';
+import SearchCategory from '../pages/Search.jsx';
 
 // Route-based code splitting — each page is its own chunk.
 const HomePage = lazy(() => import('@/pages/HomePage.jsx'));
@@ -65,7 +69,10 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="products" element={<ProductListPage />} />
-            <Route path="products/:id" element={<ProductDetailPage />} />
+            <Route path="bestsellers" element={<Bestsellers />} />
+            <Route path="newArrivals" element={<NewArrivals/>}/>
+            <Route path='emptyCart' element={<Emptycart/>}/>
+            <Route path='search' element={<SearchCategory/>}/>
             <Route path="cart" element={<CartPage />} />
             <Route path="wishlist" element={<WishlistPage />} />
             <Route path="rewards" element={<RewardsPage />} />

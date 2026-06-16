@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils.js';
 import { useFooterConfig } from '@/features/footer/hooks.js';
 import { FOOTER_DEFAULTS } from '@/features/footer/defaults.js';
 import { Search } from 'lucide-react';
-const logo = "/logo.jsx";
+
 
 const LINKS = [
   { to: '/', label: 'Home', end: true },
@@ -16,6 +16,7 @@ const LINKS = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
 
   const { data: footer } = useFooterConfig();
   const brand = { ...FOOTER_DEFAULTS.brand, ...footer?.brand };
@@ -48,24 +49,15 @@ export default function Navbar() {
 
         {/* CENTER — Logo */}
         <Link
-          to="/"
-          className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 text-ink-primary"
+        to="/"
+        className="absolute left-1/2 -translate-x-1/2 flex items-center"
         >
-          {brand.logo_url ? (
-            <img
-              src={logo}
-              alt={brand.name || 'Brand'}
-              className="h-8 w-auto object-contain"
-            />
-          ) : (
-            <>
-              <span className="grid size-8 place-items-center rounded-sm bg-accent text-ink-inverse">
-                <Sparkles className="size-4" />
-              </span>
-              <span className="text-h3">{brand.name || 'Brand'}</span>
-            </>
-          )}
-        </Link>
+        <img
+        src="/logo.png"
+        alt="Wellvia"
+       className="h-10 w-auto object-contain"
+  />
+</Link>
 
         {/* RIGHT — Search + Cart */}
         <div className="ml-auto flex items-center gap-2">
@@ -90,42 +82,87 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden glass md:hidden"
-          >
-            <ul className="flex flex-col gap-1 px-6 py-4">
-              {LINKS.map((l) => (
-                <li key={l.to}>
-                  <Link
-                    to={l.to}
-                    onClick={() => setOpen(false)}
-                    className="block rounded-sm px-3 py-2.5 text-base text-ink-secondary hover:text-ink-primary"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
+      {/* Mobile Sidebar */}
+<AnimatePresence>
+  {open && (
+    <>
+      {/* Overlay */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/40 z-40"
+        onClick={() => setOpen(false)}
+      />
 
-              <li className="mt-2 border-t border-line-subtle pt-3">
-                <Link
-                  to="/login"
-                  className="block px-3 py-2 text-accent"
-                  onClick={() => setOpen(false)}
-                >
-                  Sign in
-                </Link>
-              </li>
-            </ul>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Sidebar */}
+      <motion.div
+        initial={{ x: "-100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "-100%" }}
+        transition={{ duration: 0.3 }}
+        className="fixed top-0 left-0 h-screen w-[80%] max-w-xs bg-white z-50 p-6 inclusive-sans"
+      >
+        {/* Close Button */}
+        <button
+          onClick={() => setOpen(false)}
+          className="mb-8 text-2xl"
+        >
+          ✕
+        </button>
+
+        {/* Links */}
+        <div className="space-y-6 ">
+
+          <div className="border-b pb-3">
+  <button
+    onClick={() => setShopOpen((v) => !v)}
+    className="flex w-full justify-between"
+  >
+    <span>SHOP</span>
+    <span>{shopOpen ? "∧" : "∨"}</span>
+  </button>
+
+  {shopOpen && (
+    <div className="mt-3 ml-4 flex flex-col gap-3 text-sm text-gray-600">
+      <Link to="/products" onClick={() => setOpen(false)}>
+        All Products
+      </Link>
+
+      <Link to="/products" onClick={() => setOpen(false)}>
+        Best Sellers
+      </Link>
+
+      <Link to="/products" onClick={() => setOpen(false)}>
+        New Launches
+      </Link>
+    </div>
+  )}
+</div>
+
+          <div className="flex justify-between border-b pb-3">
+            <span>CATEGORIES</span>
+          </div>
+
+          <div className="flex justify-between border-b pb-3">
+            <span>BLOG</span>
+          </div>
+
+          <div className="flex justify-between border-b pb-3">
+            <span>CONTACT</span>
+          </div>
+
+        </div>
+
+        {/* Sign In */}
+        <button className="mt-12 w-full rounded-full bg-[#133F30] py-3 text-white">
+          Sign In with Phone No.
+        </button>
+
+      </motion.div>
+    </>
+  )}
+</AnimatePresence>
     </header>
   );
 }
