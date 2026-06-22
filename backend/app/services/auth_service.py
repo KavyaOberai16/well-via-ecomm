@@ -1,0 +1,323 @@
+import logging
+import secrets
+from dataclasses import dataclass
+
+import redis
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
+from app.core.exceptions import ConflictError, TooManyRequestsError, UnauthorizedError
+from app.core.rate_limit import RateLimiter
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    hash_password,
+    verify_password,
+)
+from app.email import send_email
+from app.models.user import User
+from app.repositories.user_repository import UserRepository
+from app.schemas.common import Token
+from app.schemas.user import UserCreate
+from app.services.loyalty_service import LoyaltyService
+from app.services.referral_service import ReferralService
+from app.services.session_service import SessionService
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class LoginOutcome:
+    """Discriminated result from `AuthService.login`. Either a real token
+    pair (no 2FA needed) or a pending token (caller must finish via
+    /auth/login/totp). Exactly one of `token`/`pending_token` is set."""
+
+    token: Token | None = None
+    needs_totp: bool = False
+    pending_token: str | None = None
+
+
+def _otp_key(email: str) -> str:
+    return f"otp:reset:{email.lower()}"
+
+
+class AuthService:
+    def __init__(self, db: Session, redis_client: redis.Redis | None = None):
+        self.db = db
+        self.users = UserRepository(db)
+        self.redis = redis_client or redis.Redis.from_url(
+            settings.REDIS_URL, decode_responses=True
+        )
+        # Share the Redis client with the rate limiter so we don't open two
+        # connections per request.
+        self.rl = RateLimiter(self.redis)
+
+    def register(self, data: UserCreate) -> User:
+        if self.users.get_by_email(data.email):
+            raise ConflictError("Email already registered")
+        user = User(
+            email=data.email,
+            full_name=data.full_name,
+            hashed_password=hash_password(data.password),
+        )
+        self.users.add(user)
+        self.db.flush()  # so user.id is set when we award the bonus
+        # Sign-up bonus runs inside the same transaction so a failure here
+        # rolls the user creation back too — easier to debug than a half-baked
+        # account with no points row.
+        try:
+            LoyaltyService(self.db, self.redis).award_signup_bonus(user)
+        except Exception as exc:
+            # Don't fail registration on a loyalty hiccup; this is a courtesy.
+            logger.warning("signup bonus failed for %s: %s", data.email, exc)
+        # Referral: create the pending row + mint the friend-welcome coupon.
+        # Failures are logged and swallowed — never let referral block signup.
+        if data.referral_code:
+            try:
+                ReferralService(self.db).register_referred_user(user, data.referral_code)
+            except Exception as exc:
+                logger.warning(
+                    "referral processing failed for %s: %s", data.email, exc
+                )
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def login(self, email: str, password: str) -> "LoginOutcome":
+        # Three gates layered cheapest-first so we never run bcrypt on an
+        # already-blocked request:
+        #   1. Account lockout (a previous failure streak)
+        #   2. Per-email sliding window (slows enumeration attacks)
+        #   3. The actual password verify
+        normalised = (email or "").strip().lower()
+        self.rl.check_lockout(normalised)
+        self.rl.enforce(
+            scope="login.email",
+            identifier=normalised,
+            limit=settings.RATE_LIMIT_LOGIN_EMAIL_PER_15MIN,
+            window_sec=15 * 60,
+        )
+
+        user = self.users.get_by_email(email)
+        if not user or not verify_password(password, user.hashed_password):
+            # Bump the failure counter (15-minute reset window) and lock the
+            # account if the threshold is crossed. We deliberately count
+            # against the *attempted* email — locking a non-existent email is
+            # fine and avoids leaking signal to an attacker.
+            count = self.rl.increment_failure(normalised, window_sec=15 * 60)
+            if (
+                settings.ACCOUNT_LOCKOUT_THRESHOLD > 0
+                and count >= settings.ACCOUNT_LOCKOUT_THRESHOLD
+            ):
+                self.rl.set_lockout(
+                    normalised, minutes=settings.ACCOUNT_LOCKOUT_MINUTES
+                )
+                logger.warning(
+                    "auth: locked %s for %d min after %d failures",
+                    normalised,
+                    settings.ACCOUNT_LOCKOUT_MINUTES,
+                    count,
+                )
+            raise UnauthorizedError("Invalid credentials")
+        if not user.is_active:
+            raise UnauthorizedError("Account disabled")
+
+        # Password is good. If the user has TOTP enabled AND the system has
+        # 2FA at least in "optional" mode, bridge to the second-factor step.
+        # We do NOT clear failure counters yet — the second factor still has
+        # to clear before this counts as a "successful login".
+        from app.services.totp_service import TotpService
+
+        totp_svc = TotpService(self.db)
+        if user.totp_enabled and totp_svc.is_enabled_system_wide():
+            pending = secrets.token_urlsafe(24)
+            # 5-minute TTL: enough time to grab the phone, not so much that a
+            # stolen browser tab can replay it later.
+            self.redis.setex(f"auth:pending_totp:{pending}", 300, str(user.id))
+            return LoginOutcome(needs_totp=True, pending_token=pending)
+
+        self.rl.clear_failures(normalised)
+        token = self._issue_tokens(user)
+        return LoginOutcome(token=token)
+
+    def complete_login_totp(self, pending_token: str, code: str) -> Token:
+        """Second step of 2FA login. Trades the pending token + a valid TOTP
+        (or backup code) for a real token pair."""
+        from app.services.totp_service import TotpService
+
+        key = f"auth:pending_totp:{pending_token}"
+        user_id_raw = self.redis.get(key)
+        if not user_id_raw:
+            raise UnauthorizedError("Verification expired — please sign in again.")
+        try:
+            user_id = int(user_id_raw)
+        except (TypeError, ValueError) as exc:
+            raise UnauthorizedError("Invalid verification token") from exc
+
+        user = self.users.get(user_id)
+        if not user or not user.is_active:
+            self.redis.delete(key)
+            raise UnauthorizedError("Account no longer active")
+
+        # Rate-limit verification attempts per pending token to prevent a
+        # 6-digit brute force inside the 5-minute window.
+        self.rl.enforce(
+            scope="login.totp",
+            identifier=pending_token,
+            limit=8,
+            window_sec=300,
+        )
+
+        if not TotpService(self.db).verify(user, code):
+            raise UnauthorizedError("That code didn't match.")
+
+        # Consume the pending token (single-use) and finalize.
+        self.redis.delete(key)
+        self.rl.clear_failures((user.email or "").lower())
+        self.db.commit()  # persist backup-code consumption from TotpService.verify
+        return self._issue_tokens(user)
+
+    def _issue_tokens(self, user: User) -> Token:
+        """Start a new refresh-token family for the user. Used on a fresh
+        login (password or Google). Subsequent /auth/refresh calls rotate
+        within this family."""
+        sessions = SessionService(self.redis)
+        family_id, jti = sessions.start_family(user.id)
+        return Token(
+            access_token=create_access_token(user.id, {"admin": user.is_admin}),
+            refresh_token=create_refresh_token(
+                user.id, family_id=family_id, jti=jti
+            ),
+        )
+
+    # ---- Refresh / logout ----
+
+    def refresh(self, refresh_token: str) -> Token:
+        """Trade a valid refresh token for a fresh access + rotated refresh.
+        Raises UnauthorizedError when the token is bad, expired, or has been
+        reused — see SessionService.rotate for the failure semantics."""
+        payload = decode_token(refresh_token)
+        if payload.get("type") != "refresh":
+            raise UnauthorizedError("Wrong token type")
+        family_id = payload.get("fid")
+        old_jti = payload.get("jti")
+        sub = payload.get("sub")
+        if not (family_id and old_jti and sub):
+            # Pre-rotation tokens didn't carry these. They MUST log in again
+            # rather than ride a stateless refresh — that's the whole point
+            # of this feature.
+            raise UnauthorizedError("Please sign in again")
+
+        user_id = int(sub)
+        user = self.users.get(user_id)
+        if not user or not user.is_active:
+            raise UnauthorizedError("Account no longer active")
+
+        sessions = SessionService(self.redis)
+        new_jti = sessions.rotate(family_id, old_jti, user_id)
+
+        return Token(
+            access_token=create_access_token(user.id, {"admin": user.is_admin}),
+            refresh_token=create_refresh_token(
+                user.id, family_id=family_id, jti=new_jti
+            ),
+        )
+
+    def logout(self, refresh_token: str | None) -> None:
+        """End the session corresponding to this refresh token. Silent on a
+        bad/expired token — logout should never expose extra signal."""
+        if not refresh_token:
+            return
+        try:
+            payload = decode_token(refresh_token)
+        except UnauthorizedError:
+            return
+        if payload.get("type") != "refresh":
+            return
+        family_id = payload.get("fid")
+        sub = payload.get("sub")
+        if not (family_id and sub):
+            return
+        SessionService(self.redis).revoke_family(family_id, int(sub))
+
+    def revoke_all_sessions(self, user_id: int) -> int:
+        """Admin/self action — kicks every device this user is signed in on."""
+        return SessionService(self.redis).revoke_all_for_user(user_id)
+
+    def active_session_count(self, user_id: int) -> int:
+        return SessionService(self.redis).session_count(user_id)
+
+    # ---- Password reset (OTP over email) ----
+
+    def request_password_reset(self, email: str) -> None:
+        """Generate and email a one-time code. Silent if the email is unknown
+        — the caller must not reveal whether an account exists."""
+        # Per-email rate limit. We *silently* swallow the 429 here because the
+        # endpoint is response-uniform by design — surfacing a 429 would leak
+        # whether the email exists ("oh, this address gets rate limited =>
+        # someone already requested for it"). The attacker just sees the same
+        # "if registered, a code has been sent" reply.
+        normalised = (email or "").strip().lower()
+        try:
+            self.rl.enforce(
+                scope="forgot.email",
+                identifier=normalised,
+                limit=settings.RATE_LIMIT_FORGOT_PASSWORD_EMAIL_PER_HOUR,
+                window_sec=3600,
+            )
+        except TooManyRequestsError:
+            logger.info("forgot-password rate limited for %s", normalised)
+            return
+
+        user = self.users.get_by_email(email)
+        if not user:
+            return
+        otp = f"{secrets.randbelow(1_000_000):06d}"
+        self.redis.setex(_otp_key(email), settings.OTP_TTL_MINUTES * 60, otp)
+        send_email(
+            to=email,
+            subject="Your password reset code",
+            body=(
+                f"Your one-time password reset code is: {otp}\n\n"
+                f"It expires in {settings.OTP_TTL_MINUTES} minutes. "
+                "If you didn't request this, you can ignore this email."
+            ),
+        )
+
+    def reset_password(self, email: str, otp: str, new_password: str) -> None:
+        stored = self.redis.get(_otp_key(email))
+        if not stored or stored != otp:
+            raise UnauthorizedError("Invalid or expired code")
+        user = self.users.get_by_email(email)
+        if not user:
+            raise UnauthorizedError("Invalid or expired code")
+        user.hashed_password = hash_password(new_password)
+        self.db.commit()
+        self.redis.delete(_otp_key(email))
+
+    # ---- Google sign-in ----
+
+    def login_with_google(self, email: str, full_name: str | None) -> Token:
+        """Find or create a user for a verified Google profile, then issue tokens."""
+        user = self.users.get_by_email(email)
+        if not user:
+            user = User(
+                email=email,
+                full_name=full_name,
+                # No usable password — a Google user signs in via Google
+                # (or sets a password later through the reset flow).
+                hashed_password=hash_password(secrets.token_urlsafe(32)),
+                is_active=True,
+            )
+            self.users.add(user)
+            self.db.flush()
+            try:
+                LoyaltyService(self.db, self.redis).award_signup_bonus(user)
+            except Exception as exc:
+                logger.warning("signup bonus failed for %s: %s", email, exc)
+            self.db.commit()
+            self.db.refresh(user)
+        elif not user.is_active:
+            raise UnauthorizedError("Account disabled")
+        return self._issue_tokens(user)

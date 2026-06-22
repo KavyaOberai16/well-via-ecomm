@@ -1,0 +1,209 @@
+import { useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, ZoomIn } from 'lucide-react';
+import { cn } from '@/lib/utils.js';
+import { ProductMedia } from '../ProductMedia.jsx';
+import { WishlistButton } from '@/features/wishlist/WishlistButton.jsx';
+
+/**
+ * Product gallery — a vertical thumbnail rail beside a large main image with
+ * an Amazon-style hover magnifier. Thumbnails swap the main image on
+ * hover/click; on mobile the rail drops below and the stage is swipeable.
+ *
+ * A thumbnail/main slot becomes a <video> when its URL is a video file, so
+ * uploading a video "just works" without any extra setup.
+ */
+
+const VIDEO_RE = /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i;
+const isVideo = (url) => typeof url === 'string' && VIDEO_RE.test(url);
+
+// Amazon-style hover zoom magnification factor.
+const ZOOM = 2.4;
+const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+
+export function LuxuryGallery({ product }) {
+  const images = useMemo(
+    () =>
+      [...(product.images || [])].sort(
+        (a, b) =>
+          Number(b.is_primary) - Number(a.is_primary) || a.position - b.position,
+      ),
+    [product.images],
+  );
+
+  const [active, setActive] = useState(0);
+  const [lens, setLens] = useState(null);
+  const stageRef = useRef(null);
+  const touchX = useRef(null);
+
+  // No images at all — graceful gradient placeholder.
+  if (images.length === 0) {
+    return (
+      <div className="flex flex-col-reverse gap-4 lg:flex-row">
+        <div className="hidden lg:block lg:w-20 lg:shrink-0" />
+        <div className="aspect-square w-full overflow-hidden rounded-lg border border-line-subtle bg-bg-elevated">
+          <ProductMedia product={product} eager />
+        </div>
+      </div>
+    );
+  }
+
+  const current = images[Math.min(active, images.length - 1)];
+  const currentIsVideo = isVideo(current.url);
+
+  function onMouseMove(e) {
+    if (currentIsVideo) return;
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const { width: w, height: h } = rect;
+    const px = clamp(((e.clientX - rect.left) / w) * 100, 0, 100);
+    const py = clamp(((e.clientY - rect.top) / h) * 100, 0, 100);
+    const lensW = w / ZOOM;
+    const lensH = h / ZOOM;
+    const lx = clamp(e.clientX - rect.left - lensW / 2, 0, w - lensW);
+    const ly = clamp(e.clientY - rect.top - lensH / 2, 0, h - lensH);
+    setLens({ px, py, x: lx, y: ly, w: lensW, h: lensH });
+  }
+
+  function step(dir) {
+    setActive((i) => (i + dir + images.length) % images.length);
+  }
+  function onTouchStart(e) {
+    touchX.current = e.touches[0].clientX;
+  }
+  function onTouchEnd(e) {
+    if (touchX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+    touchX.current = null;
+  }
+
+  return (
+    <div className="flex flex-col-reverse gap-4 lg:flex-row lg:items-start">
+      {/* Thumbnail rail */}
+      <div
+        className="flex shrink-0 gap-2.5 overflow-x-auto pb-1 lg:w-20 lg:flex-col lg:overflow-visible lg:pb-0"
+        aria-label="Product images"
+      >
+        {images.map((img, i) => {
+          const vid = isVideo(img.url);
+          return (
+            <button
+              key={img.id}
+              type="button"
+              onMouseEnter={() => setActive(i)}
+              onFocus={() => setActive(i)}
+              onClick={() => setActive(i)}
+              aria-label={`View ${vid ? 'video' : 'image'} ${i + 1}`}
+              aria-current={i === active}
+              className={cn(
+                'relative size-16 shrink-0 overflow-hidden rounded-md border bg-bg-elevated transition-all duration-200 focus-visible:focus-ring lg:size-20',
+                i === active
+                  ? 'border-accent ring-2 ring-accent/30 shadow-sm'
+                  : 'border-line-subtle opacity-80 hover:opacity-100 hover:border-line-strong',
+              )}
+            >
+              {vid ? (
+                <>
+                  <video src={img.url} muted playsInline className="size-full object-cover" />
+                  <span className="absolute inset-0 grid place-items-center bg-black/30">
+                    <Play className="size-4 text-white" aria-hidden="true" />
+                  </span>
+                </>
+              ) : (
+                <img src={img.url} alt="" loading="lazy" className="size-full object-cover" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Stage */}
+      <div className="relative min-w-0 flex-1">
+        <div
+          ref={stageRef}
+          onMouseMove={onMouseMove}
+          onMouseLeave={() => setLens(null)}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          className="group relative aspect-square w-full select-none overflow-hidden rounded-lg border border-line-subtle bg-bg-elevated"
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current.id}
+              initial={{ opacity: 0, scale: 1.02 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="size-full"
+            >
+              {currentIsVideo ? (
+                <video
+                  src={current.url}
+                  controls
+                  playsInline
+                  className="size-full bg-black object-contain"
+                />
+              ) : (
+                <img
+                  src={current.url}
+                  alt={product.name}
+                  fetchpriority="high"
+                  draggable={false}
+                  className={cn('size-full object-cover', !lens && 'cursor-zoom-in')}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Lens — tracks the cursor over the source image */}
+          {lens && !currentIsVideo && (
+            <div
+              className="pointer-events-none absolute z-[2] rounded-sm border border-white/80 bg-white/10 shadow-[0_0_0_2000px_rgba(0,0,0,0.18)]"
+              style={{ left: lens.x, top: lens.y, width: lens.w, height: lens.h }}
+            />
+          )}
+
+          {/* Wishlist */}
+          <div className="absolute right-4 top-4 z-10">
+            <WishlistButton productId={product.id} />
+          </div>
+
+          {/* Zoom hint */}
+          {!currentIsVideo && (
+            <div className="pointer-events-none absolute bottom-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-bg-base/70 px-3 py-1.5 text-xs text-ink-secondary opacity-0 backdrop-blur transition-opacity duration-200 group-hover:opacity-100">
+              <ZoomIn className="size-3.5" aria-hidden="true" /> Hover to zoom
+            </div>
+          )}
+        </div>
+
+        {/* Magnifier panel */}
+        {lens && !currentIsVideo && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-[calc(100%+1.25rem)] top-0 z-40 hidden aspect-square w-[400px] overflow-hidden rounded-lg border border-line-strong bg-bg-elevated shadow-lg lg:block xl:w-[460px]"
+            style={{
+              backgroundImage: `url(${current.url})`,
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: `${ZOOM * 100}%`,
+              backgroundPosition: `${lens.px}% ${lens.py}%`,
+            }}
+          />
+        )}
+
+        {/* Dots (mobile) */}
+        <div className="mt-3 flex justify-center gap-1.5 lg:hidden">
+          {images.map((img, i) => (
+            <span
+              key={img.id}
+              className={cn(
+                'h-1.5 rounded-full transition-all',
+                i === active ? 'w-5 bg-accent' : 'w-1.5 bg-line-strong',
+              )}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
