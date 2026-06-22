@@ -8,20 +8,26 @@ import RequirePermission from './RequirePermission.jsx';
 import ScrollToTop from './ScrollToTop.jsx';
 import AuthBootstrap from './AuthBootstrap.jsx';
 import { PageFallback } from '@/components/feedback/PageFallback.jsx';
+
 import Bestsellers from '../pages/Bestsellers.jsx';
 import NewArrivals from '../pages/NewArrivals.jsx';
 import Emptycart from '../pages/Emptycart.jsx';
 import SearchCategory from '../pages/Search.jsx';
+import Blog from '../pages/Blog.jsx';
+const CartPage = lazy(() => import('@/pages/CartPage.jsx'));
+import CartPage2 from '../pages/CartPage2.jsx';
+const OrdersPage = lazy(() => import('@/pages/OrdersPage.jsx'));
+import OrderPage2 from '../pages/OrderPage2.jsx';
+import SingleProduct from '../pages/SingleProduct.jsx';
+import Checkout from '../pages/Checkout.jsx';
 
 // Route-based code splitting — each page is its own chunk.
 const HomePage = lazy(() => import('@/pages/HomePage.jsx'));
 const ProductListPage = lazy(() => import('@/pages/ProductListPage.jsx'));
 const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage.jsx'));
-const CartPage = lazy(() => import('@/pages/CartPage.jsx'));
 const CheckoutPage = lazy(() => import('@/pages/CheckoutPage.jsx'));
 const PaymentMockPage = lazy(() => import('@/pages/PaymentMockPage.jsx'));
 const PaymentReturnPage = lazy(() => import('@/pages/PaymentReturnPage.jsx'));
-const OrdersPage = lazy(() => import('@/pages/OrdersPage.jsx'));
 const WishlistPage = lazy(() => import('@/pages/WishlistPage.jsx'));
 const RewardsPage = lazy(() => import('@/pages/RewardsPage.jsx'));
 const AccountSecurityPage = lazy(() => import('@/pages/AccountSecurityPage.jsx'));
@@ -73,12 +79,21 @@ export default function App() {
             <Route path="newArrivals" element={<NewArrivals/>}/>
             <Route path='emptyCart' element={<Emptycart/>}/>
             <Route path='search' element={<SearchCategory/>}/>
+            <Route path='blog' element={<Blog/>}/>
             <Route path="cart" element={<CartPage />} />
+            <Route path='cart2' element={<CartPage2/>} />
+            <Route path="orders" element={<OrdersPage />} />
+            <Route path='orders2' element={<OrderPage2/>} />
+            <Route path='checkout' element={<Checkout/>}/>
+            <Route path='singleProd' element={<SingleProduct/>}/>
+
+
+
+
             <Route path="wishlist" element={<WishlistPage />} />
             <Route path="rewards" element={<RewardsPage />} />
             <Route path="account/security" element={<AccountSecurityPage />} />
             <Route path="checkout" element={<CheckoutPage />} />
-            <Route path="orders" element={<OrdersPage />} />
             <Route path="payments/mock/:txnId" element={<PaymentMockPage />} />
             <Route path="payments/return" element={<PaymentReturnPage />} />
             <Route path="login" element={<LoginPage />} />
