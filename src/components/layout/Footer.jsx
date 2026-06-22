@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Mail, ChevronDown } from "lucide-react";
 
-/* ================= TICKER ================= */
 function Ticker() {
   return (
     <div className="mt-8 w-full overflow-hidden border-y border-white/10 bg-[#F5EBD7] py-2 text-black text-sm">
@@ -28,7 +27,6 @@ function Ticker() {
   );
 }
 
-/* ================= FOOTER ================= */
 export default function Footer() {
   const [open, setOpen] = useState(null);
 
@@ -41,7 +39,7 @@ export default function Footer() {
 
     return (
       <div className="border-b border-white/10 py-3">
-        {/* HEADER */}
+
         <button
           onClick={() => toggle(id)}
           className="flex justify-between w-full text-left text-white text-lg"
@@ -58,8 +56,7 @@ export default function Footer() {
             <ChevronDown size={18} />
           </motion.div>
         </button>
-
-        {/* ACCORDION */}
+        
         <motion.div
           initial={false}
           animate={{
@@ -83,10 +80,10 @@ export default function Footer() {
 
   return (
     <>
-      {/* TICKER */}
+  
       <Ticker />
 
-      {/* FOOTER */}
+    
       <footer className="bg-[#133F30] text-white px-6 py-12 alata-font">
 
         <div className="mb-10 mt-6">
