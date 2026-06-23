@@ -15,11 +15,14 @@ import Emptycart from '../pages/Emptycart.jsx';
 import SearchCategory from '../pages/Search.jsx';
 import Blog from '../pages/Blog.jsx';
 const CartPage = lazy(() => import('@/pages/CartPage.jsx'));
-import CartPage2 from '../pages/CartPage2.jsx';
 const OrdersPage = lazy(() => import('@/pages/OrdersPage.jsx'));
 import OrderPage2 from '../pages/OrderPage2.jsx';
 import SingleProduct from '../pages/SingleProduct.jsx';
 import Checkout from '../pages/Checkout.jsx';
+import Address from '../pages/Address.jsx';
+import ProductDisplay from '../pages/ProductDisplay.jsx';
+import NourishBlog from '../pages/NourishBlog.jsx';
+import Review from '../pages/Review.jsx';
 
 // Route-based code splitting — each page is its own chunk.
 const HomePage = lazy(() => import('@/pages/HomePage.jsx'));
@@ -81,11 +84,14 @@ export default function App() {
             <Route path='search' element={<SearchCategory/>}/>
             <Route path='blog' element={<Blog/>}/>
             <Route path="cart" element={<CartPage />} />
-            <Route path='cart2' element={<CartPage2/>} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path='orders2' element={<OrderPage2/>} />
             <Route path='checkout' element={<Checkout/>}/>
             <Route path='singleProd' element={<SingleProduct/>}/>
+            <Route path='address' element={<Address/>}/>
+            <Route path='productDisplay' element={<ProductDisplay/>}/>
+            <Route path='nourishBlog' element={<NourishBlog/>}/>
+            <Route path='review' element={<Review/>}/>
 
 
 

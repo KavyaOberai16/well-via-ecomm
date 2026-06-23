@@ -26,7 +26,7 @@ export default function Checkout() {
     <div>
       <div className="bg-[#133F30] h-5"></div>
 
-      {/* HEADER */}
+      
       <div className="flex items-center gap-3 ml-4 mt-4">
         <div className="flex h-8 w-8 items-center justify-center rounded-full border">
           ←
@@ -36,14 +36,14 @@ export default function Checkout() {
 
       <div className="w-full min-h-screen bg-[#EDEFF5] pb-6">
 
-        {/* TOP TEXT */}
+      
         <div className="flex items-center justify-between px-5 pt-6 pb-4">
           <div className="text-xs font-medium text-[#1B3A4B]">
             100% secured payment 🔒
           </div>
         </div>
 
-        {/* PROGRESS */}
+        
         <div className="px-5 mb-2">
           <p className="text-sm text-[#1B3A4B] mb-2">Step 1 of 3</p>
           <div className="w-full h-1.5 bg-gray-300 rounded-full overflow-hidden">
@@ -51,7 +51,7 @@ export default function Checkout() {
           </div>
         </div>
 
-        {/* ORDER CARD */}
+      
         <div className="px-5 mt-4">
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
 
@@ -78,7 +78,7 @@ export default function Checkout() {
               </div>
             </div>
 
-            {/* SAVINGS */}
+            
             <div className="bg-teal-50 px-5 py-4 flex justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#1B3A4B]">You're saving more!</p>
@@ -92,7 +92,7 @@ export default function Checkout() {
               </div>
             </div>
 
-            {/* OFFERS */}
+            
             <div className="flex items-center justify-between p-5 border-t border-gray-100">
               <div>
                 <h3 className="text-base font-semibold text-[#1B3A4B]">Offers & Rewards</h3>
@@ -103,7 +103,7 @@ export default function Checkout() {
               </button>
             </div>
 
-            {/* LOGIN */}
+            
             <div className="flex items-center justify-between p-5 border-t border-gray-100">
               <div>
                 <h3 className="text-base font-semibold text-[#1B3A4B]">Login to continue</h3>
@@ -125,8 +125,11 @@ export default function Checkout() {
 
           </div>
         </div>
+        <div className="flex flex-col items-center">
+        <button className='mt-10 rounded-md bg-[#133F30] px-6 py-2 text-white alata-font'>Continue</button>
+        </div>
 
-        {/* THIS IS THE FIXED GAP AREA */}
+        
         <div className="text-center mt-3 px-5">
           <p className="text-sm font-semibold text-[#1B3A4B] underline cursor-pointer mb-1">
             Still Thinking? Read This First
@@ -136,7 +139,7 @@ export default function Checkout() {
           </p>
         </div>
 
-        {/* REVIEWS */}
+        
         <section className="px-4 mt-3">
 
           <h2 className="text-center text-xl font-semibold mb-6 alata-font">
@@ -145,7 +148,7 @@ export default function Checkout() {
 
           <div className="bg-white rounded-3xl border border-gray-200 p-4 flex gap-4">
 
-            {/* AVATARS */}
+          
             <div className="relative w-1/2 h-40">
               <img src="/avatar3F.jpg" className="absolute top-0 left-6 w-10 h-10 rounded-full" />
               <img src="/avatar4F.jpg" className="absolute top-2 right-4 w-10 h-10 rounded-full" />
@@ -154,7 +157,7 @@ export default function Checkout() {
               <img src="/avatar2M.png" className="absolute bottom-5 left-12 w-10 h-10 rounded-full" />
             </div>
 
-            {/* REVIEW */}
+
             <div className="relative w-1/2 min-h-[160px] flex flex-col justify-center pl-2">
 
               <AnimatePresence mode="wait">

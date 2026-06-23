@@ -157,6 +157,37 @@ export default function CartPage() {
     <button className='bg-[#A38732] text-white px-2 py-1'>Apply Code</button>
   </div>
 
+   <div className="mx-4 mt-6 rounded-lg border p-4 shadow-sm bg-white">
+
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <img
+          src="/destination.png"
+          alt=""
+          className="h-5 w-5"
+        />
+        <p className="font-semibold">
+          Delivery for pincode 110057
+        </p>
+      </div>
+
+      <button className="text-sm text-[#133F30] underline">
+        Change
+      </button>
+    </div>
+
+    <p className="mt-2 text-sm text-gray-500">
+      Yay! Your pincode is eligible for delivery
+    </p>
+    <h2 className="text-[#133F30] mt-2">Delivery by 25 June, Wednesday</h2>
+
+  </div>
+
+  <img src="banklogo.png"
+  alt=""
+  className="mt-10 w-full"
+  />
+
   <div className="mt-6 mx-4 rounded-lg border p-4 shadow-sm">
 
   <div className="flex justify-between">
